@@ -4,5 +4,5 @@ number of data columns:	4
 number of data rows:	52561
 list of column names:	Elapsed time [sec],Heating power [W],T dayzone [K],T nightzone [K]
 list of default KPIs:	10-min NMBE [%],Hourly CVRMSE [%],Daily Amplitude CVRMSE [%]
-list of default KPI_weights:	1,2,3
+list of default KPI_weights:	1,2,3,4
 sampling time interval [sec]:	600
