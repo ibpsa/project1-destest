@@ -6,3 +6,4 @@ list of column names:	Elapsed time [sec],Heat injection power [W],Heat losses [W
 list of default KPIs:	NMBE [%],Hourly CVRMSE [%],Daily Amplitude CVRMSE [%]
 list of default KPI_weights:	1,1,1
 sampling time interval [sec]:	900
+list typical days:	2018-01-02,2018-01-05
