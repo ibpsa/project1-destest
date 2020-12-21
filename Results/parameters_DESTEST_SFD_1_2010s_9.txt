@@ -6,4 +6,5 @@ list of column names:	Elapsed time [sec],Heating power [W],T dayzone [K],T night
 list of default KPIs:	NMBE [%],Hourly CVRMSE [%],Daily Amplitude CVRMSE [%]
 list of default KPI_weights:	1,1,1
 sampling time interval [sec]:	600
+start date time:	2018-01-01 00:00:00
 list typical days:	2018-01-05,2018-05-05
