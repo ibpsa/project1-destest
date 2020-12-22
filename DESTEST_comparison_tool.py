@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*- #######################################################
 # Hicham Johra                                                                #
 # hj@build.aau.dk                                                             #
-# 2020-12-13                                                                  #
+# 2020-12-21                                                                  #
 ###############################################################################
 
 '#' 'To-do list' '#' '--------------------------------------------------------'
 ###############################################################################
 """
+- Add progression bar for the DESTEST plot generation and report generation
+
 - Replace the link to the correct online guideline document (from AAU vbn.dk)
 
 - Change the online repository discovery mode to get the list of all files inside
@@ -999,7 +1001,7 @@ def load_parameters (server_info, parameter_file_name, list_implemented_KPIs, li
     'Init progess bar'
     progress = Progressbar(frame1, orient = HORIZONTAL, length = 200, mode = 'determinate') # New horizontal progress bar in determinate (normal) mode
     progress.pack(pady=5)
-    progress['value'] = 10
+    progress['value'] = 5
     gui.update_idletasks()
     
     
@@ -1080,6 +1082,25 @@ def load_parameters (server_info, parameter_file_name, list_implemented_KPIs, li
                 print('error test')
             finally:
                 validity_vect.append(test_result)
+            
+            'Check that start date time is a datetime.datetime type'
+            index = list_parameters_name.index('start date time:')
+            start_date_time = list_parameters_value[index] # Raw data string
+            try:
+                start_date_time = np.datetime64(start_date_time).astype(datetime) # Try to convert into datetime format
+                test_result = type(start_date_time) == datetime
+            except: # not a proper datetime input, there will be an error
+                test_result = False
+                print('error test')
+            finally:
+                validity_vect.append(test_result)
+            
+            'Check that the list typical days is not empty'
+            index = list_parameters_name.index('list typical days:')
+            list_typical_days = list_parameters_value[index] # Raw data string
+            list_typical_days = list_typical_days.split(",") # Split by comma and place in a list
+            test_result =  len(list_typical_days) > 0
+            validity_vect.append(test_result)
                 
             'Finally, check that all validity tests are True'        
             validity_file = all(validity_vect) # AND operator on all list elements
@@ -1181,7 +1202,7 @@ def load_parameters (server_info, parameter_file_name, list_implemented_KPIs, li
         print(df_parameters)
         
         'Update progress bar'
-        progress['value'] = 20
+        progress['value'] = 10
         gui.update_idletasks()
         
         'Parameters from the parameter file'
@@ -1189,28 +1210,28 @@ def load_parameters (server_info, parameter_file_name, list_implemented_KPIs, li
         nbr_data_column = int(df_parameters.iloc[index,1]) # Convert into integer
         
         'Update progress bar'
-        progress['value'] = 30
+        progress['value'] = 20
         gui.update_idletasks()
         
         index = df_parameters[df_parameters[0]=='length header data files (number of lines):'].first_valid_index()
         header_length = int(df_parameters.iloc[index,1]) # Convert into integer
     
         'Update progress bar'
-        progress['value'] = 40
+        progress['value'] = 30
         gui.update_idletasks()
     
         index = df_parameters[df_parameters[0]=='first data line (line number):'].first_valid_index()
         first_line_data = int(df_parameters.iloc[index,1]) # Convert into integer
         
         'Update progress bar'
-        progress['value'] = 50
+        progress['value'] = 40
         gui.update_idletasks()
         
         index = df_parameters[df_parameters[0]=='number of data rows:'].first_valid_index()
         nbr_data_rows = int(df_parameters.iloc[index,1]) # Convert into integer
         
         'Update progress bar'
-        progress['value'] = 60
+        progress['value'] = 50
         gui.update_idletasks()
         
         index = df_parameters[df_parameters[0]=='list of column names:'].first_valid_index()
@@ -1218,7 +1239,7 @@ def load_parameters (server_info, parameter_file_name, list_implemented_KPIs, li
         list_column_names = list_column_names.split(",") # Split by comma and place in a list
         
         'Update progress bar'
-        progress['value'] = 70
+        progress['value'] = 60
         gui.update_idletasks()
         
         index = df_parameters[df_parameters[0]=='list of default KPIs:'].first_valid_index()
@@ -1226,7 +1247,7 @@ def load_parameters (server_info, parameter_file_name, list_implemented_KPIs, li
         list_default_KPIs = list_default_KPIs.split(",") # Split by comma and place in a list
         
         'Update progress bar'
-        progress['value'] = 80
+        progress['value'] = 70
         gui.update_idletasks()
         
         index = df_parameters[df_parameters[0]=='list of default KPI_weights:'].first_valid_index()
@@ -1235,12 +1256,28 @@ def load_parameters (server_info, parameter_file_name, list_implemented_KPIs, li
         list_default_KPI_weights = list(map(float, list_default_KPI_weights)) # Convert list of str into list of float
         
         'Update progress bar'
-        progress['value'] = 90
+        progress['value'] = 80
         gui.update_idletasks()
         
         index = df_parameters[df_parameters[0]=='sampling time interval [sec]:'].first_valid_index()
         sampling_time = int(df_parameters.iloc[index,1]) # Convert into integer
-
+        
+        'Update progress bar'
+        progress['value'] = 90
+        gui.update_idletasks()
+        
+        index = df_parameters[df_parameters[0]=='start date time:'].first_valid_index()
+        start_date_time = df_parameters.iloc[index,1] # Raw data string
+        start_date_time = np.datetime64(start_date_time).astype(datetime) # Try to convert into datetime format
+        
+        'Update progress bar'
+        progress['value'] = 95
+        gui.update_idletasks()
+        
+        index = df_parameters[df_parameters[0]=='list typical days:'].first_valid_index()
+        list_typical_days = df_parameters.iloc[index,1] # Raw data string
+        list_typical_days = list_typical_days.split(",") # Split by comma and place in a list
+        
         'Load parameters into parameters class'
         parameters.nbr_data_column = nbr_data_column
         parameters.header_length = header_length
@@ -1250,6 +1287,8 @@ def load_parameters (server_info, parameter_file_name, list_implemented_KPIs, li
         parameters.list_default_KPIs = list_default_KPIs
         parameters.list_default_KPI_weights = list_default_KPI_weights
         parameters.sampling_time = sampling_time # [sec] Time interval in between 2 consecutive measurement points
+        parameters.start_date_time = start_date_time # Type Datetime
+        parameters.list_typical_days = list_typical_days # Only date stamp without time stamp
         
         'Update progress bar'
         progress['value'] = 100
@@ -1499,8 +1538,8 @@ def check_validity_DESTEST_folder (filtering_code, parameters, server_info, echo
         
         # Parameters ##########################################################
         
-        start = datetime(2018,1,1)
-        end = datetime(2019,1,1)
+        start = parameters.start_date_time
+        end = start + timedelta(seconds=(parameters.sampling_time*(parameters.nbr_data_rows-1)))
         time_step_sec = parameters.sampling_time # [sec]
         
         # Sub-Sub Function: Generate time stamp ###############################
@@ -3098,137 +3137,74 @@ def DESTEST_plots (df_result, parameters, no_user_test, max_DESTEST_cases_on_gra
         
     # Profile graphs ##########################################################
     
-    '5th of January'
-    for p in list_parameters:
-        'Get data from df_DESTEST_data, df_user_test_data and reference_df to limit max graphs'
-        
-        'Filter df columns that contains the current parameter of interest'
-        list_boolean_targets = list(p in name for name in df_DESTEST_data.columns) # Boolean list based on condition "p" in "name" with loop on "name"
-        list_name_targets = list(df_DESTEST_data.columns[list_boolean_targets]) # Get all corresponding column names with "p" in it
-        df_destest_cases = df_DESTEST_data[list_name_targets] # Filter df columns that contains the current parameter of interest
-        
-        'limit number of DESTEST cases'
-        df_destest_cases = df_destest_cases.iloc[:,0:min(len(df_destest_cases.columns), max_DESTEST_cases_on_graph)]
-        
-        'remove prefix from the DESDEST df column names'
-        prefix = p + ' - '
-        list_destest_cases = list(df_destest_cases.columns.str.lstrip(prefix)) # Get again list DESTEST from the df just to be sure it's in the same order
-        df_destest_cases.columns = list_destest_cases
-        
-        'get data from reference (including time vectors)'
-        ref_df_time = reference_df.iloc[:,0:2]
-        ref_df_data = pd.DataFrame(reference_df[p])
-        ref_df_data.columns = ['Reference']
-        
-        'Set min and max of the time series'
-        xmin = np.datetime64('2018-01-05 00:00:00')
-        xmax = np.datetime64('2018-01-06 00:00:00')
-        
-        'Find indexes of min max in timestamp series'
-        x = ref_df_time['Date and Time'] # Time vector
-        xmin_index = list(x).index(xmin)
-        xmax_index = list(x).index(xmax)
-        
-        x = x[xmin_index:xmax_index+1]
-        
-        if not no_user_test:
-            y = df_user_test_data[p][xmin_index:xmax_index+1]
-            plt.plot(x, y, label = "User Test", color='red', linewidth=2)
-        
-        'Plot ref line'
-        y = ref_df_data[xmin_index:xmax_index+1]
-        plt.plot(x, y, label = "Reference", color='black', linewidth=2)
-        
-        'Plot other lines'
-        for c in list_destest_cases:
-            y = df_destest_cases[c][xmin_index:xmax_index+1]
-            plt.plot(x, y, label = c, linewidth=0.5)
-        
-        
-        'Format plot'
-        plt.xlabel('Date and Time')
-        plt.ylabel(p)
-        
-        ax = plt.gca() # get the current axes
-
-        ax.set_xlim(xmin, xmax)
-        
-        ax.xaxis.set_minor_locator(dates.HourLocator(interval=4))   # every 4 hours
-        ax.xaxis.set_minor_formatter(dates.DateFormatter('%H:%M'))  # hours and minutes
-        ax.xaxis.set_major_locator(dates.DayLocator(interval=1))    # every day
-        ax.xaxis.set_major_formatter(dates.DateFormatter('%H:%M\n%Y-%m-%d')) # Show date only at each midnight 00:00
-        
-        plt.title(p + str(' on the 5th of January'))
-        plt.legend()
-
-        plt.show() # Display a figure
-    
-    '5th of May'
-    for p in list_parameters:
-        'Get data from df_DESTEST_data, df_user_test_data and reference_df to limit max graphs'
-        
-        'Filter df columns that contains the current parameter of interest'
-        list_boolean_targets = list(p in name for name in df_DESTEST_data.columns) # Boolean list based on condition "p" in "name" with loop on "name"
-        list_name_targets = list(df_DESTEST_data.columns[list_boolean_targets]) # Get all corresponding column names with "p" in it
-        df_destest_cases = df_DESTEST_data[list_name_targets] # Filter df columns that contains the current parameter of interest
-        
-        'limit number of DESTEST cases'
-        df_destest_cases = df_destest_cases.iloc[:,0:min(len(df_destest_cases.columns), max_DESTEST_cases_on_graph)]
-        
-        'remove prefix from the DESDEST df column names'
-        prefix = p + ' - '
-        list_destest_cases = list(df_destest_cases.columns.str.lstrip(prefix)) # Get again list DESTEST from the df just to be sure it's in the same order
-        df_destest_cases.columns = list_destest_cases
-        
-        'get data from reference (including time vectors)'
-        ref_df_time = reference_df.iloc[:,0:2]
-        ref_df_data = pd.DataFrame(reference_df[p])
-        ref_df_data.columns = ['Reference']
-        
-        'Set min and max of the time series'
-        xmin = np.datetime64('2018-05-05 00:00:00')
-        xmax = np.datetime64('2018-05-06 00:00:00')
-        
-        'Find indexes of min max in timestamp series'
-        x = ref_df_time['Date and Time'] # Time vector
-        xmin_index = list(x).index(xmin)
-        xmax_index = list(x).index(xmax)
-        
-        x = x[xmin_index:xmax_index+1]
-        
-        if not no_user_test:
-            y = df_user_test_data[p][xmin_index:xmax_index+1]
-            plt.plot(x, y, label = "User Test", color='red', linewidth=2)
-        
-        'Plot ref line'
-        y = ref_df_data[xmin_index:xmax_index+1]
-        plt.plot(x, y, label = "Reference", color='black', linewidth=2)
-        
-        'Plot other lines'
-        for c in list_destest_cases:
-            y = df_destest_cases[c][xmin_index:xmax_index+1]
-            plt.plot(x, y, label = c, linewidth=0.5)
-        
-        
-        'Format plot'
-        plt.xlabel('Date and Time')
-        plt.ylabel(p)
-        
-        ax = plt.gca() # get the current axes
-
-        ax.set_xlim(xmin, xmax)
-        
-        ax.xaxis.set_minor_locator(dates.HourLocator(interval=4))   # every 4 hours
-        ax.xaxis.set_minor_formatter(dates.DateFormatter('%H:%M'))  # hours and minutes
-        ax.xaxis.set_major_locator(dates.DayLocator(interval=1))    # every day
-        ax.xaxis.set_major_formatter(dates.DateFormatter('%H:%M\n%Y-%m-%d')) # Show date only at each midnight 00:00
-        
-        plt.title(p + str(' on the 5th of May'))
-        plt.legend()
-
-        plt.show() # Display a figure
-    
-    
+    'loop through the list of typical days'
+    list_typical_days = parameters.list_typical_days
+    for d in list_typical_days:
+        for p in list_parameters:
+            'Get data from df_DESTEST_data, df_user_test_data and reference_df to limit max graphs'
+            
+            'Filter df columns that contains the current parameter of interest'
+            list_boolean_targets = list(p in name for name in df_DESTEST_data.columns) # Boolean list based on condition "p" in "name" with loop on "name"
+            list_name_targets = list(df_DESTEST_data.columns[list_boolean_targets]) # Get all corresponding column names with "p" in it
+            df_destest_cases = df_DESTEST_data[list_name_targets] # Filter df columns that contains the current parameter of interest
+            
+            'limit number of DESTEST cases'
+            df_destest_cases = df_destest_cases.iloc[:,0:min(len(df_destest_cases.columns), max_DESTEST_cases_on_graph)]
+            
+            'remove prefix from the DESDEST df column names'
+            prefix = p + ' - '
+            list_destest_cases = list(df_destest_cases.columns.str.lstrip(prefix)) # Get again list DESTEST from the df just to be sure it's in the same order
+            df_destest_cases.columns = list_destest_cases
+            
+            'get data from reference (including time vectors)'
+            ref_df_time = reference_df.iloc[:,0:2]
+            ref_df_data = pd.DataFrame(reference_df[p])
+            ref_df_data.columns = ['Reference']
+            
+            'Set min and max of the time series'
+            xmin = np.datetime64(d + ' 00:00:00')
+            xmax = xmin + np.timedelta64(1,'D') # Add one full day
+            
+            'Find indexes of min max in timestamp series'
+            x = ref_df_time['Date and Time'] # Time vector
+            xmin_index = list(x).index(xmin)
+            xmax_index = list(x).index(xmax)
+            
+            x = x[xmin_index:xmax_index+1]
+            
+            if not no_user_test:
+                y = df_user_test_data[p][xmin_index:xmax_index+1]
+                plt.plot(x, y, label = "User Test", color='red', linewidth=2)
+                
+            'Plot ref line'
+            y = ref_df_data[xmin_index:xmax_index+1]
+            plt.plot(x, y, label = "Reference", color='black', linewidth=2)
+            
+            'Plot other lines'
+            for c in list_destest_cases:
+                y = df_destest_cases[c][xmin_index:xmax_index+1]
+                plt.plot(x, y, label = c, linewidth=0.5)
+                
+            
+            'Format plot'
+            plt.xlabel('Date and Time')
+            plt.ylabel(p)
+            
+            ax = plt.gca() # get the current axes
+            
+            ax.set_xlim(xmin, xmax)
+            
+            ax.xaxis.set_minor_locator(dates.HourLocator(interval=4))   # every 4 hours
+            ax.xaxis.set_minor_formatter(dates.DateFormatter('%H:%M'))  # hours and minutes
+            ax.xaxis.set_major_locator(dates.DayLocator(interval=1))    # every day
+            ax.xaxis.set_major_formatter(dates.DateFormatter('%H:%M\n%Y-%m-%d')) # Show date only at each midnight 00:00
+            
+            plt.title(p + str(' on the ') + str(d))
+            plt.legend()
+            
+            plt.show() # Display a figure
+            
+            
     # Time distribution graphs ################################################
     
     for p in list_parameters:
@@ -3385,7 +3361,9 @@ def DESTEST_comparison (echo=False):
                                'list of column names:',
                                'list of default KPIs:',
                                'list of default KPI_weights:',
-                               'sampling time interval [sec]:'
+                               'sampling time interval [sec]:',
+                               'start date time:',
+                               'list typical days:'
                                ]
     
     'Limit the number of DESTEST cases visible on the result graphs to improve readability of the graph'
