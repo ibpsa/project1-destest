@@ -4179,13 +4179,13 @@ def DESTEST_comparison(echo=False):
     "Github server information"
     server_info.user = "ibpsa"  # Name of the Github
     server_info.repository = "project1-destest"  # name of the repository
-    server_info.url = "https://api.github.com/repos/{}/{}/git/trees/MichaMans-networks-and-new-folder-structure?recursive=1".format(
+    server_info.url = "https://api.github.com/repos/{}/{}/git/trees/master?recursive=1".format(
         server_info.user, server_info.repository
     )  # Recursive to get sub-folders as well
     server_info.root_raw_data = (
         "https://raw.githubusercontent.com/"
     )  # Read data file from raw.githubusercontent.com
-    server_info.master_folder_name = "/MichaMans-networks-and-new-folder-structure/"
+    server_info.master_folder_name = "/master/"
 
     "KPIs / Comparison Metrics implemented in the module"
     list_implemented_KPIs = [
