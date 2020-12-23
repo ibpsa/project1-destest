@@ -2,7 +2,7 @@ name: Package exe with PyInstaller - Windows
 
 on:
   push:
-    branches: [ master, test_github_actions ]
+    branches: [ master ]
   pull_request:
     branches: [ master ]
 
