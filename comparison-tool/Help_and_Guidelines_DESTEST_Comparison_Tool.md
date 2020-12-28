@@ -2,7 +2,7 @@
 
 **IBPSA Project 1 - District Energy Simulation Test Procedure (DESTEST)**
 
-**This is currently under construction**
+*This is currently under construction*
 
 # Table of Contents
 
