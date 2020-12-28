@@ -17,7 +17,7 @@
     1. [Select List of KPIs / Comparison Metrics](#select-list-of-kpis-comparison-metrics)
     1. [Computation of the DESTEST Comparison Calculation](#computation-of-the-destest-comparison-calculation)
     1. [Generation of the Output Analysis Report with Figures and Tables](#generation-of-the-output-analysis-report-with-figures-and-tables)
-1. Output Analysis Report with Figures and Tables
+1. [Output Analysis Report with Figures and Tables](#output-analysis-report-with-figures-and-tables)
 1. [Editing and Expanding the DESTEST Comparison Tool](#editing-and-expanding-the-destest-comparison-tool)
 
 # Introduction
