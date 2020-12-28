@@ -7,17 +7,17 @@
 # Table of Contents
 
 1. [Introduction](#introduction)
-2. [DESTEST Comparison Tool Procedure (Step by Step)](#destest-comparison-tool-procedure-step-by-step)
-    2. [Select Case Type for DESTEST Comparison](#select-case-type-for-destest-comparison)
-    2. [Select Case Characteristics for DESTEST Comparison](#select-case-characteristics-for-destest-comparison)
-    2. [Loading Parameters of the Selected Case](#loading-parameters-of-the-selected-case)
-    2. [Checking the Validity of the Online DESTEST Repository](#checking-the-validity-of-the-online-destest-repository)
-    2. [Loading DESTEST Data](#loading-destest-data)
-    2. [Select User Data File](#select-user-data-file)
-    2. [Select List of KPIs / Comparison Metrics](#select-list-of-kpis-comparison-metrics)
-    2. [Computation of the DESTEST Comparison Calculation](#computation-of-the-destest-comparison-calculation)
-    2. [Generation of the Output Analysis Report with Figures and Tables](#generation-of-the-output-analysis-report-with-figures-and-tables)
-3. [Editing and Expanding the DESTEST Comparison Tool Code](#editing-and-expanding-the-destest-comparison-tool-code)
+1. [DESTEST Comparison Tool Procedure (Step by Step)](#destest-comparison-tool-procedure-step-by-step)
+    1. [Select Case Type for DESTEST Comparison](#select-case-type-for-destest-comparison)
+    1. [Select Case Characteristics for DESTEST Comparison](#select-case-characteristics-for-destest-comparison)
+    1. [Loading Parameters of the Selected Case](#loading-parameters-of-the-selected-case)
+    1. [Checking the Validity of the Online DESTEST Repository](#checking-the-validity-of-the-online-destest-repository)
+    1. [Loading DESTEST Data](#loading-destest-data)
+    1. [Select User Data File](#select-user-data-file)
+    1. [Select List of KPIs / Comparison Metrics](#select-list-of-kpis-comparison-metrics)
+    1. [Computation of the DESTEST Comparison Calculation](#computation-of-the-destest-comparison-calculation)
+    1. [Generation of the Output Analysis Report with Figures and Tables](#generation-of-the-output-analysis-report-with-figures-and-tables)
+1. [Editing and Expanding the DESTEST Comparison Tool Code](#editing-and-expanding-the-destest-comparison-tool-code)
 
 # Introduction
 
