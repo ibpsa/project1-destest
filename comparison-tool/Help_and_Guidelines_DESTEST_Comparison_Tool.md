@@ -17,7 +17,7 @@
     1. [Select List of KPIs / Comparison Metrics](#select-list-of-kpis-comparison-metrics)
     1. [Computation of the DESTEST Comparison Calculation](#computation-of-the-destest-comparison-calculation)
     1. [Generation of the Output Analysis Report with Figures and Tables](#generation-of-the-output-analysis-report-with-figures-and-tables)
-1. [Editing and Expanding the DESTEST Comparison Tool Code](#editing-and-expanding-the-destest-comparison-tool-code)
+1. [Editing and Expanding the DESTEST Comparison Tool](#editing-and-expanding-the-destest-comparison-tool)
 
 # Introduction
 
@@ -89,7 +89,13 @@ The User can stop the DESTEST Comparison Procedure at any time by closing the GU
 
 [Go back :arrow_up:](#table-of-contents)
 
-# Editing and Expanding the DESTEST Comparison Tool Code
+# Output Analysis Report with Figures and Tables
+
+Explanation of what is in the output report.
+
+[Go back :arrow_up:](#table-of-contents)
+
+# Editing and Expanding the DESTEST Comparison Tool
 
 Some instructions about the structure of the Python code and how to add new cases for new common exercises and new KPIs / Comparison Metrics
 
