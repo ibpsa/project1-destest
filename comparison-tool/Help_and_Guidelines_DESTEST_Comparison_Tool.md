@@ -18,7 +18,45 @@ This is a Tutorial to use the dedicated Python-based tool to perform the compari
 
 # DESTEST Comparison Tool Procedure (Step by Step)
 
-blablabla
+The DESTEST Comparison Tool is a linear Graphical User Interface (GUI) that guides the user through the different steps to select a specific common exercise case and compare all results of the latter to a reference result, and compare the user result data (optional).
+The comparison consists in the calculation of the difference in between the time series of the different output result parameters. This difference calculation is performed according to different Key Performance Indicators (KPIs) / Comparison Metrics and grading weights that can be specified by the user.
+The User can stop the DESTEST Comparison Procedure at any time by closing the GUI window (cross icon on the upper right corner of the GUI window).
+
+## Select Case Type for DESTEST Comparison
+
+...
+
+## Select Case Characteristics for DESTEST Comparison
+
+...
+
+## Loading Parameters of the Selected Case
+
+...
+
+## Checking the Validity of the Online DESTEST Repository
+
+...
+
+## Loading DESTEST Data
+
+...
+
+## Select User Data File
+
+...
+
+## Select List of KPIs / Comparison Metrics
+
+...
+
+## Computation of the DESTEST Comparison Calculation
+
+...
+
+## Generation of the Output Analysis Report with Figures and Tables
+
+...
 
 # Editing and Expanding the DESTEST Comparison Tool Code
 
