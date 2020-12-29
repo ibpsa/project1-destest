@@ -1,0 +1,24 @@
+name: Package exe with PyInstaller - Windows
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: PyInstaller Windows
+      uses: JackMcKew/pyinstaller-action-windows@main
+      with:
+        path: comparison-tool
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: DESTEST_comparison_tool
+        path: comparison-tool/dist/windows # or path/to/artifact
