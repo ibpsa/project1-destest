@@ -1,21 +1,29 @@
 # -*- coding: utf-8 -*- #######################################################
-# Hicham Johra                                                                #
-# hj@build.aau.dk                                                             #
-# 2020-12-21                                                                  #
+#                                                                             #
+#   Hicham Johra                                                              #
+#   2020-12-30                                                                #
+#   Aalborg University, Denmark                                               #
+#   hj@build.aau.dk                                                           #
+#                                                                             #
+#   Acknowledgement to co-developers:                                         #
+#      - Konstantin Filonenko, SDU, Denmark                                   #
+#      - Michael Mans, RWTH Aachen University, Germany                        #
+#      - Ina De Jaeger, KU Leuven, Belgium                                    #
+#      - Dirk Saelens, KU Leuven, Belgium                                     #
+#                                                                             #
 ###############################################################################
 
-"#" "To-do list" "#" "--------------------------------------------------------"
+"To-do list" "----------------------------------------------------------------"
 ###############################################################################
 """
-- Add progression bar for the DESTEST plot generation and report generation
+- Add function for generation of output analysis report as PDF or Excel (Konstantin)
 
-- Replace the link to the correct online guideline document (from AAU vbn.dk)
-
-- Change the online repository discovery mode to get the list of all files inside
-  if the structure of the folders in the Github repository changes
+- Add "send data" button to send pull-request the User Test Data File to the GitHub repository if the file is valid.
+Then format the data file correctly, ask for a user name, generate name file with user name + tag-name of the common exercise case
+check that this file name is not already in the list of data files found in the online repository under that name-tag
+if not okay, then cancel operation. If it's all correct, then generate pull-request in the right sub-folder'
 """
 ###############################################################################
-
 
 "#############################################################################"
 "##                                                                         ##"
@@ -86,9 +94,7 @@ try:
     from datetime import date, datetime, timedelta  # Date and time stamp generation
 
 except:
-    message = str(
-        "An error has occurred: Some libraries / packages could not be imported correctly.\n\nYou should install (using pip) these missing libraries / packages to run the script correctly.\n\nThe script is terminated immediately."
-    )
+    message = str("An error has occurred: Some libraries / packages could not be imported correctly.\n\nYou should install (using pip) these missing libraries / packages to run the script correctly.\n\nThe script is terminated immediately.")
     "Create a tk gui, hide it immediately, and destroy it after message clicked"
     gui = tk.Tk()
     gui.withdraw()
@@ -99,41 +105,34 @@ except:
 else:
     print("\nLoading of libraries completed")
 
+
 "#############################################################################"
 "##                             Common CLasses                              ##"
 "#############################################################################"
 
 "Exception for Abort action from the user"
-
-
 class Abort_exception(Exception):
     """The user aborted the procedure."""
-
     pass
 
 
 "Class parameters to carry information from parameter file"
-
-
 class parameters:
     pass
 
 
 "CLass server_info to carry information about the online folder with all the files"
-
-
 class server_info:
     pass
 
 
 "#############################################################################"
-"##             Common Module (Definition of General Functions)             ##"
+"##                            Common Functions                             ##"
 "#############################################################################"
 
 ###############################################################################
 ###                      Get full path to online file                       ###
 ###############################################################################
-
 
 def get_full_path_to_online_file(file_name, server_info, echo=False):
     """Generates the full path of a file to the online DESTEST repository from
@@ -146,8 +145,7 @@ def get_full_path_to_online_file(file_name, server_info, echo=False):
             + "/"
             + server_info.repository
             + server_info.master_folder_name
-            + file_name
-        )
+            + file_name)
     except:
         if echo:
             print("\nWrong file path generation.")
@@ -160,16 +158,13 @@ def get_full_path_to_online_file(file_name, server_info, echo=False):
 ###                      CVRMSE from diff case - ref                        ###
 ###############################################################################
 
-
 def Calculate_CVRMSE_from_diff_case_ref(diff_case_ref, reference_vector):
     """Calculate the Coefficient of Variation of Root Mean Squared Error (CVRMSE)
     of a case compared to a reference: CVRMSE with all data points [%]"""
 
     nbr_samples = len(diff_case_ref)  # Number of samples
-    avrg_ref = (
-        reference_vector.mean()
-    )  # Average value of the reference = number samples ref * mean average ref
-    square_diff = diff_case_ref ** 2  #
+    avrg_ref = (reference_vector.mean())  # Average value of the reference = number samples ref * mean average ref
+    square_diff = diff_case_ref ** 2
     sum_squares = square_diff.sum()
     CVRMSE = ((math.sqrt(sum_squares / nbr_samples)) / avrg_ref) * 100
 
@@ -179,16 +174,13 @@ def Calculate_CVRMSE_from_diff_case_ref(diff_case_ref, reference_vector):
 ###############################################################################
 ###                             Daily amplitude                             ###
 ###############################################################################
+
 def Calculate_daily_amplitude(input_vector):
     """Caculate the amplitude (max - min) over 24 hours (daily) from midnight
     to midnight on data df with date and time stamp in 1st column"""
 
-    vector_min = input_vector.resample(
-        "1440min", on="Date and Time"
-    ).min()  # Daily min (24h resampling)
-    vector_max = input_vector.resample(
-        "1440min", on="Date and Time"
-    ).max()  # Daily max (24h resampling)
+    vector_min = input_vector.resample("1440min", on="Date and Time").min()  # Daily min (24h resampling)
+    vector_max = input_vector.resample("1440min", on="Date and Time").max()  # Daily max (24h resampling)
 
     "With resample .min() or .max(), the date and time stamp column does not replace the index column, so need to select data column if only 1 data column for further calculation"
     vector_min = vector_min.iloc[:, 1]
@@ -207,7 +199,6 @@ def Calculate_daily_amplitude(input_vector):
 ###                                NMBE [%]                                 ###
 ###############################################################################
 
-
 def function_NMBE(reference_vector, test_case_vector, date_and_time_stamp_vect):
     """Calculate the Normalized Mean Bias Error (NMBE) of a case compared to
     reference [%]. NMBE with all data points"""
@@ -224,10 +215,7 @@ def function_NMBE(reference_vector, test_case_vector, date_and_time_stamp_vect):
 ###                           Hourly CVRMSE [%]                             ###
 ###############################################################################
 
-
-def function_Hourly_CVRMSE(
-    reference_vector, test_case_vector, date_and_time_stamp_vect
-):
+def function_Hourly_CVRMSE(reference_vector, test_case_vector, date_and_time_stamp_vect):
     """Calculate the Coefficient of Variation of Root Mean Squared Error (CVRMSE)
     on Hourly running average data: Need resampling at 60 min freq"""
 
@@ -236,13 +224,9 @@ def function_Hourly_CVRMSE(
 
     "Resampling"
     frames = [date_and_time_stamp_vect, diff_case_ref]  # The 2 df to concat
-    diff_case_ref = pd.concat(
-        frames, axis=1, join="outer"
-    )  # date and time followed by data on the right
+    diff_case_ref = pd.concat(frames, axis=1, join="outer")  # date and time followed by data on the right
     "With resample .mean(), the date and time stamp column replaces the index column, so no need to select data column if only 1 data column for further calculation"
-    diff_case_ref = diff_case_ref.resample(
-        "60min", on="Date and Time"
-    ).mean()  # Resample as hourly mean average: the time stamp column becomes index column
+    diff_case_ref = diff_case_ref.resample("60min", on="Date and Time").mean()  # Resample as hourly mean average: the time stamp column becomes index column
 
     hourly_CVRMSE = Calculate_CVRMSE_from_diff_case_ref(diff_case_ref, reference_vector)
 
@@ -253,50 +237,34 @@ def function_Hourly_CVRMSE(
 ###                      Daily Amplitude CVRMSE [%]                         ###
 ###############################################################################
 
-
-def function_Daily_Amplitude_CVRMSE(
-    reference_vector, test_case_vector, date_and_time_stamp_vect
-):
+def function_Daily_Amplitude_CVRMSE(reference_vector, test_case_vector, date_and_time_stamp_vect):
     """CVRMSE of the daily amplitude from midnight to midnight: Need resampling
     at 1440 min"""
 
     "Daily amplitude test case"
     frames = [date_and_time_stamp_vect, test_case_vector]  # The 2 df to concat
-    input_vector = pd.concat(
-        frames, axis=1, join="outer"
-    )  # date and time followed by data on the right
-    Daily_amplitude_case = Calculate_daily_amplitude(
-        input_vector
-    )  # Get daily amplitude user test data
+    input_vector = pd.concat(frames, axis=1, join="outer")  # date and time followed by data on the right
+    Daily_amplitude_case = Calculate_daily_amplitude(input_vector)  # Get daily amplitude user test data
 
     "Daily amplitude reference profile"
     frames = [date_and_time_stamp_vect, reference_vector]  # The 2 df to concat
-    input_vector = pd.concat(
-        frames, axis=1, join="outer"
-    )  # date and time followed by data on the right
-    Daily_amplitude_reference = Calculate_daily_amplitude(
-        input_vector
-    )  # Get daily amplitude user test data
+    input_vector = pd.concat(frames, axis=1, join="outer")  # date and time followed by data on the right
+    Daily_amplitude_reference = Calculate_daily_amplitude(input_vector)  # Get daily amplitude user test data
 
     "Difference daily amplitude between test case and reference"
     Diff_daily_aimplitude_case_ref = Daily_amplitude_case - Daily_amplitude_reference
 
     "CVRMSE"
-    daily_amp_CVRMSE = Calculate_CVRMSE_from_diff_case_ref(
-        Diff_daily_aimplitude_case_ref, Daily_amplitude_reference
-    )  # Calculate the CVRMSE
+    daily_amp_CVRMSE = Calculate_CVRMSE_from_diff_case_ref(Diff_daily_aimplitude_case_ref, Daily_amplitude_reference)  # Calculate the CVRMSE
 
     return round(daily_amp_CVRMSE, 2)
 
 
 ###############################################################################
-###             R squared (coefficient of determination) [-]                 ###
+###             R squared (coefficient of determination) [-]                ###
 ###############################################################################
 
-
-def function_R_squared_coeff_determination(
-    reference_vector, test_case_vector, date_and_time_stamp_vect
-):
+def function_R_squared_coeff_determination(reference_vector, test_case_vector, date_and_time_stamp_vect):
     """R squared (R2) is defined here as the coefficient of determination: it 
     is the proportion of the variance in the dependant variable (model output 
     or model prediction) that is predictable from the independent variable(s) 
@@ -340,7 +308,6 @@ def function_R_squared_coeff_determination(
 ###                                 RMSE [-]                                ###
 ###############################################################################
 
-
 def function_RMSE(reference_vector, test_case_vector, date_and_time_stamp_vect):
     """Calculate the Root Mean Squared Error (RMSE) of a case 
     compared to a reference [%]: RMSLE with all data points"""
@@ -367,7 +334,6 @@ def function_RMSE(reference_vector, test_case_vector, date_and_time_stamp_vect):
 ###############################################################################
 ###                                RMSLE [-]                                ###
 ###############################################################################
-
 
 def function_RMSLE(reference_vector, test_case_vector, date_and_time_stamp_vect):
     """Calculate the Root Mean Squared Logarithmic Error (RMSLE) of a case 
@@ -399,7 +365,6 @@ def function_RMSLE(reference_vector, test_case_vector, date_and_time_stamp_vect)
 ###                               CVRMSE [%]                                ###
 ###############################################################################
 
-
 def function_CVRMSE(reference_vector, test_case_vector, date_and_time_stamp_vect):
     """Calculate the Coefficient of Variation of Root Mean Squared Error (CVRMSE)
     of a case compared to a reference: CVRMSE with all data points [%]"""
@@ -429,7 +394,6 @@ def function_CVRMSE(reference_vector, test_case_vector, date_and_time_stamp_vect
 ###                                Minimum                                  ###
 ###############################################################################
 
-
 def function_Minimum(reference_vector, test_case_vector, date_and_time_stamp_vect):
     result = test_case_vector.min()
     return round(result, 2)
@@ -438,7 +402,6 @@ def function_Minimum(reference_vector, test_case_vector, date_and_time_stamp_vec
 ###############################################################################
 ###                                Maximum                                  ###
 ###############################################################################
-
 
 def function_Maximum(reference_vector, test_case_vector, date_and_time_stamp_vect):
     result = test_case_vector.max()
@@ -449,7 +412,6 @@ def function_Maximum(reference_vector, test_case_vector, date_and_time_stamp_vec
 ###                                Average                                  ###
 ###############################################################################
 
-
 def function_Average(reference_vector, test_case_vector, date_and_time_stamp_vect):
     result = test_case_vector.mean()
     return round(result, 2)
@@ -459,20 +421,18 @@ def function_Average(reference_vector, test_case_vector, date_and_time_stamp_vec
 ###                           Standard Deviation                            ###
 ###############################################################################
 
-
 def function_std_dev(reference_vector, test_case_vector, date_and_time_stamp_vect):
     result = np.std(test_case_vector)
     return round(result, 2)
 
 
 "#############################################################################"
-"##                 Main Module (Definition of Functions)                   ##"
+"##                    Module (Definition of Functions)                     ##"
 "#############################################################################"
 
 ###############################################################################
 ###                   Welcome message with link to help                     ###
 ###############################################################################
-
 
 def welcome_message(echo=False):
     """
@@ -487,20 +447,15 @@ def welcome_message(echo=False):
     gui = tk.Tk()  # Create a new window (widget, root, object)
 
     "Change closing wnidow handling"
-
     def on_closing():
         """if closing the window, raise exception to be caught by error handler 
-        to destroy the gui and raise the error to top leve"""
-
-        if mbox.askokcancel(
-            "ABORT", "Do you want to abort the DESTEST comparison procedure?"
-        ):
+        to destroy the gui and raise the error to top level"""
+        if mbox.askokcancel("ABORT", "Do you want to abort the DESTEST comparison procedure?"):
             raise Abort_exception("The user aborted the procedure.")
 
     gui.protocol("WM_DELETE_WINDOW", on_closing)
 
     "Change exception handler of tkinter"
-
     def show_error(self, *args):
         nonlocal gui
         gui.destroy()
@@ -513,26 +468,21 @@ def welcome_message(echo=False):
     gui.title("Welcome")
     screen_width = gui.winfo_screenwidth()
     screen_height = gui.winfo_screenheight()
-    gui.geometry(
-        "420x152+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125)
-    )  # Adjust window size as a function of screen resolution
+    gui.geometry("440x305+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window size as a function of screen resolution
     gui.lift()  # Place on top of all Python windows
     gui.attributes("-topmost", True)  # Place on top of all windows (all the time)
     gui.attributes("-topmost", False)  # Disable on top all the time
     gui.resizable(width=False, height=False)  # Disable resizing of the window
 
-    # Sub-function: get_help ###############################################
+    # Sub-function: get_help ##################################################
 
     "Define the function to be executed by the get_help_button"
 
     def get_help(echo=False):
         "Open the help file pdf that is on the AAU server vbn.aau.dk"
         try:
-            "Open pdf from url in default web-browser"
-            webbrowser.open(
-                "https://vbn.aau.dk/ws/portalfiles/portal/310880370/Cleaning_Procedure_for_the_Guarded_Hot_Plate_Apparatus_EP500.pdf",
-                new=2,
-            )
+            "Open markdown file from url in default web-browser"
+            webbrowser.open("https://github.com/ibpsa/project1-destest/blob/master/comparison-tool/Help_and_Guidelines_DESTEST_Comparison_Tool.md")
 
         except:
             mbox.showerror("Error", "The help file could not be opened.")
@@ -547,10 +497,9 @@ def welcome_message(echo=False):
 
     # End Sub-function ########################################################
 
-    # Sub-function: OK_end #########################################
+    # Sub-function: OK_end ####################################################
 
     "Close the GUI window and proceed witht the rest of the procedure"
-
     def start():
         gui.destroy()  # Close the GUI window, no output
 
@@ -560,25 +509,31 @@ def welcome_message(echo=False):
 
     "Pack/grid the different buttons and labels on the GUI window"
 
-    frame1 = tk.LabelFrame(gui, width=400, height=75)
+    frame1 = tk.LabelFrame(gui, width=420, height=228)
     frame1.pack(padx=10, pady=10)
-    frame1.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame1.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Display welcome message in GUI label"
-    welcome_message_text = 'Welcome to the DESTEST data comparison online tool.\nFor more information, help and guidelines, click the "HELP" button.\nTo start the comparison procedure, click the "START" button.'
-    my_label = tk.Label(
-        frame1, text=welcome_message_text
-    )  # Grid the welcome message on the window
+    welcome_message_text = """Welcome to the DESTEST comparison tool.
+    
+    The DESTEST comparison procedure consists of the following steps:
+    - Selection of the case type.
+    - Selection of the case characteristics.
+    - Loading of the pool of DESTEST data files.
+    - Selection of the user data file (optional).
+    - Selection of the KPIs / Comparison Metrics.
+    - Computation of the data comparison.
+    - Generation of the output analysis report with figures and tables.
+    
+    For more information, help and guidelines, click the "HELP" button.
+    To start the DESTEST comparison procedure, click the "START" button."""
+    my_label = tk.Label(frame1, text=welcome_message_text)  # Grid the welcome message on the window
     my_label.pack(padx=10, pady=10)
 
     "Frame 2"
-    frame2 = tk.LabelFrame(gui, width=400, height=42)
+    frame2 = tk.LabelFrame(gui, width=420, height=42)
     frame2.pack(padx=10, pady=(0, 5))
-    frame2.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame2.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Dummy labels to grid inside frame with spacings"
     label1 = tk.Label(frame2)
@@ -589,31 +544,24 @@ def welcome_message(echo=False):
     label2.grid(row=2, column=2)
     label2.config(font=("Courier", 2))
 
-    label3 = tk.Label(
-        frame2,
-        text="                                                                    ",
-    )
+    label3 = tk.Label(frame2,text="                                                                          ")
     label3.grid(row=1, column=2)
     label3.config(font=("Courier", 2))
 
-    label4 = tk.Label(frame2, text="                                       ")
+    label4 = tk.Label(frame2, text="                                         ")
     label4.grid(row=1, column=0)
     label4.config(font=("Courier", 2))
 
-    label5 = tk.Label(frame2, text="                                       ")
+    label5 = tk.Label(frame2, text="                                         ")
     label5.grid(row=1, column=4)
     label5.config(font=("Courier", 2))
 
     "HELP button"
-    help_button = tk.Button(
-        frame2, text="HELP", command=lambda: get_help()
-    )  # Create button executing function
+    help_button = tk.Button(frame2, text="HELP", command=lambda: get_help())  # Create button executing function
     help_button.grid(row=1, column=1)
 
     "START button"
-    start_button = tk.Button(
-        frame2, text="START", command=lambda: start()
-    )  # Create button executing function
+    start_button = tk.Button(frame2, text="START", command=lambda: start())  # Create button executing function
     start_button.grid(row=1, column=3)
 
     "Generate a mainLoop to activate the gui"
@@ -628,7 +576,6 @@ def welcome_message(echo=False):
 ###                      Prompt user for case type                          ###
 ###############################################################################
 
-
 def prompt_user_case_type(echo=False):
     """
     Generate a GUI to prompt user for selecting the type of case: building or network.
@@ -640,35 +587,28 @@ def prompt_user_case_type(echo=False):
     gui = tk.Tk()  # Create a new window (widget, root, object)
 
     "Change closing wnidow handling"
-
     def on_closing():
         """if closing the window, raise exception to be caught by error handler 
-        to destroy the gui and raise the error to top leve"""
-
-        if mbox.askokcancel(
-            "ABORT", "Do you want to abort the DESTEST comparison procedure?"
-        ):
+        to destroy the gui and raise the error to top level"""
+        if mbox.askokcancel("ABORT", "Do you want to abort the DESTEST comparison procedure?"):
             raise Abort_exception("The user aborted the procedure.")
 
     gui.protocol("WM_DELETE_WINDOW", on_closing)
 
     "Change exception handler of tkinter"
-
     def show_error(self, *args):
         nonlocal gui
         gui.destroy()
         raise  # Simply raise the exception
         return
 
-    tk.Tk.report_callback_exception = show_error  # changing the Tk class itself.
+    tk.Tk.report_callback_exception = show_error  # Changing the Tk class itself.
 
     "Change the window properties"
     gui.title("Select Case Type")
     screen_width = gui.winfo_screenwidth()
     screen_height = gui.winfo_screenheight()
-    gui.geometry(
-        "420x126+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125)
-    )  # Adjust window size as a function of screen resolution
+    gui.geometry("420x126+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window size as a function of screen resolution
     gui.lift()  # Place on top of all Python windows
     gui.attributes("-topmost", True)  # Place on top of all windows (all the time)
     gui.attributes("-topmost", False)  # Disable on top all the time
@@ -688,36 +628,28 @@ def prompt_user_case_type(echo=False):
     "Pack the different buttons and labels on the GUI window"
 
     "Frame 1"
-    frame1 = tk.LabelFrame(
-        gui, text="Case Type for DESTEST Comparison", width=400, height=60
-    )
+    frame1 = tk.LabelFrame(gui, text="Case Type for DESTEST Comparison", width=400, height=60)
     frame1.pack(padx=10, pady=5)
-    frame1.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame1.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Dropdown selection menu for case type"
-    options_case_type = ["Building", "District Heating Network"]
+    options_case_type = [
+        "Building",
+        "District Heating Network"]
 
     selected_case_type = StringVar()
     selected_case_type.set(options_case_type[0])
 
-    dropdown_building_type = tk.OptionMenu(
-        frame1, selected_case_type, *options_case_type
-    )
+    dropdown_building_type = tk.OptionMenu(frame1, selected_case_type, *options_case_type)
     dropdown_building_type.pack(padx=30, pady=(5, 10))
 
     "Frame 2"
     frame2 = tk.LabelFrame(gui, width=400, height=42)
     frame2.pack(padx=10, pady=5)
-    frame2.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame2.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Confirm button"
-    confirm_button = tk.Button(
-        frame2, text="Confirm Selections", command=lambda: confirm_selection()
-    )  # Create button executing function
+    confirm_button = tk.Button(frame2, text="Confirm Selection", command=lambda: confirm_selection())  # Create button executing function
     confirm_button.pack(padx=30, pady=5)
 
     "Generate a mainLoop to activate the gui"
@@ -738,7 +670,6 @@ def prompt_user_case_type(echo=False):
 ###           Prompt user for building case characteristics                 ###
 ###############################################################################
 
-
 def prompt_user_case_characteristics_building(echo=False):
     """
     Generate a GUI to prompt user for selecting filtering parameters that will
@@ -752,20 +683,15 @@ def prompt_user_case_characteristics_building(echo=False):
     gui = tk.Tk()  # Create a new window (widget, root, object)
 
     "Change closing wnidow handling"
-
     def on_closing():
         """if closing the window, raise exception to be caught by error handler 
-        to destroy the gui and raise the error to top leve"""
-
-        if mbox.askokcancel(
-            "ABORT", "Do you want to abort the DESTEST comparison procedure?"
-        ):
+        to destroy the gui and raise the error to top level"""
+        if mbox.askokcancel("ABORT", "Do you want to abort the DESTEST comparison procedure?"):
             raise Abort_exception("The user aborted the procedure.")
 
     gui.protocol("WM_DELETE_WINDOW", on_closing)
 
     "Change exception handler of tkinter"
-
     def show_error(self, *args):
         nonlocal gui
         gui.destroy()
@@ -778,9 +704,7 @@ def prompt_user_case_characteristics_building(echo=False):
     gui.title("Select Building Case Characteristics")
     screen_width = gui.winfo_screenwidth()
     screen_height = gui.winfo_screenheight()
-    gui.geometry(
-        "420x210+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125)
-    )  # Adjust window size as a function of screen resolution
+    gui.geometry("420x210+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window size as a function of screen resolution
     gui.lift()  # Place on top of all Python windows
     gui.attributes("-topmost", True)  # Place on top of all windows (all the time)
     gui.attributes("-topmost", False)  # Disable on top all the time
@@ -799,36 +723,22 @@ def prompt_user_case_characteristics_building(echo=False):
 
     "Extract regular expression from the selected dropdown menu variables and generate the filtering code"
 
-    def generate_filtering_code(
-        selected_building_type, selected_building_year, selected_occupant_type
-    ):
+    def generate_filtering_code(selected_building_type, selected_building_year, selected_occupant_type):
 
         "Find the building_type_code in the selected_building_type"
-        pattern = (
-            "\[(.*?)\]"
-        )  # '\' to start the definition of the regular expression; (.*?) for including anything in between
+        pattern = ("\[(.*?)\]")  # '\' to start the definition of the regular expression; (.*?) for including anything in between
         target_string = selected_building_type
-        building_type_code = re.search(pattern, target_string).group(
-            1
-        )  # Wanted substring is in result group(1)
+        building_type_code = re.search(pattern, target_string).group(1)  # Wanted substring is in result group(1)
 
         "Find the building_year_code in the selected_building_year"
-        pattern = (
-            "\[(.*?)\]"
-        )  # '\' to start the definition of the regular expression; (.*?) for including anything in between
+        pattern = ("\[(.*?)\]")  # '\' to start the definition of the regular expression; (.*?) for including anything in between
         target_string = selected_building_year
-        building_year_code = re.search(pattern, target_string).group(
-            1
-        )  # Wanted substring is in result group(1)
+        building_year_code = re.search(pattern, target_string).group(1)  # Wanted substring is in result group(1)
 
         "Find the occupant_type_code in the selected_occupant_type"
-        pattern = (
-            "\[(.*?)\]"
-        )  # '\' to start the definition of the regular expression; (.*?) for including anything in between
+        pattern = ("\[(.*?)\]")  # '\' to start the definition of the regular expression; (.*?) for including anything in between
         target_string = selected_occupant_type
-        occupant_type_code = re.search(pattern, target_string).group(
-            1
-        )  # Wanted substring is in result group(1)
+        occupant_type_code = re.search(pattern, target_string).group(1)  # Wanted substring is in result group(1)
 
         "Create the filtering code to find the files in Github folder"
         filtering_code = (
@@ -837,8 +747,8 @@ def prompt_user_case_characteristics_building(echo=False):
             + building_year_code
             + "_"
             + occupant_type_code
-            + ".csv"
-        )
+            + ".csv")
+        
         parameter_file_name = (
             "parameters_DESTEST_"
             + building_type_code
@@ -846,8 +756,7 @@ def prompt_user_case_characteristics_building(echo=False):
             + building_year_code
             + "_"
             + occupant_type_code
-            + ".txt"
-        )
+            + ".txt")
 
         return filtering_code, parameter_file_name
 
@@ -858,37 +767,31 @@ def prompt_user_case_characteristics_building(echo=False):
     "Pack the different buttons and labels on the GUI window"
 
     "Frame 1"
-    frame1 = tk.LabelFrame(
-        gui, text="Case Characteristics for DESTEST Comparison", width=400, height=140
-    )
+    frame1 = tk.LabelFrame(gui, text="Building Case Characteristics for DESTEST Comparison", width=400, height=140)
     frame1.pack(padx=10, pady=10)
-    frame1.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame1.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Dropdown selection menu for building type"
     options_building_types = [
         "Single-Family Dwelling (version 1) [SFD_1]",
-        "Office Building [???]",
-    ]
+        "Office Building [???]"]
 
     selected_building_type = StringVar()
     selected_building_type.set(options_building_types[0])
 
-    dropdown_building_type = tk.OptionMenu(
-        frame1, selected_building_type, *options_building_types
-    )
+    dropdown_building_type = tk.OptionMenu(frame1, selected_building_type, *options_building_types)
     dropdown_building_type.pack(padx=30, pady=(10, 5))
 
     "Dropdown selection menu for building year"
-    options_building_year = ["1980 [1980s]", "2000 [2000s]", "2010 [2010s]"]
+    options_building_year = [
+        "1980 [1980s]",
+        "2000 [2000s]",
+        "2010 [2010s]"]
 
     selected_building_year = StringVar()
     selected_building_year.set(options_building_year[0])
 
-    dropdown_building_year = tk.OptionMenu(
-        frame1, selected_building_year, *options_building_year
-    )
+    dropdown_building_year = tk.OptionMenu(frame1, selected_building_year, *options_building_year)
     dropdown_building_year.pack(padx=30, pady=(0, 5))
 
     "Dropdown selection menu for occupant type"
@@ -909,28 +812,21 @@ def prompt_user_case_characteristics_building(echo=False):
         "14 [14]",
         "15 [15]",
         "16 [16]",
-        "ISO [ISO]",
-    ]
+        "ISO [ISO]"]
 
     selected_occupant_type = StringVar()
     selected_occupant_type.set(options_occupant_type[16])
 
-    dropdown_occupant_type = tk.OptionMenu(
-        frame1, selected_occupant_type, *options_occupant_type
-    )
+    dropdown_occupant_type = tk.OptionMenu(frame1, selected_occupant_type, *options_occupant_type)
     dropdown_occupant_type.pack(padx=30, pady=0)
 
     "Frame 2"
     frame2 = tk.LabelFrame(gui, width=400, height=42)
     frame2.pack(padx=10, pady=0)
-    frame2.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame2.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Confirm button"
-    confirm_button = tk.Button(
-        frame2, text="Confirm Selections", command=lambda: confirm_selection()
-    )  # Create button executing function
+    confirm_button = tk.Button(frame2, text="Confirm Selections", command=lambda: confirm_selection())  # Create button executing function
     confirm_button.pack(padx=30, pady=5)
 
     "Generate a mainLoop to activate the gui"
@@ -942,8 +838,7 @@ def prompt_user_case_characteristics_building(echo=False):
     filtering_code, parameter_file_name = generate_filtering_code(
         selected_building_type.get(),
         selected_building_year.get(),
-        selected_occupant_type.get(),
-    )
+        selected_occupant_type.get())
 
     if echo:
         print(
@@ -952,8 +847,7 @@ def prompt_user_case_characteristics_building(echo=False):
             "\n",
             selected_building_year.get(),
             "\n",
-            selected_occupant_type.get(),
-        )
+            selected_occupant_type.get())
         print("\n The data file filtering code is:" + filtering_code)
         print("\n The parameter file name is:" + parameter_file_name)
 
@@ -963,7 +857,6 @@ def prompt_user_case_characteristics_building(echo=False):
 ###############################################################################
 ###            Prompt user for network case characteristics                 ###
 ###############################################################################
-
 
 def prompt_user_case_characteristics_network(echo=False):
     """
@@ -978,20 +871,15 @@ def prompt_user_case_characteristics_network(echo=False):
     gui = tk.Tk()  # Create a new window (widget, root, object)
 
     "Change closing wnidow handling"
-
     def on_closing():
         """if closing the window, raise exception to be caught by error handler 
-        to destroy the gui and raise the error to top leve"""
-
-        if mbox.askokcancel(
-            "ABORT", "Do you want to abort the DESTEST comparison procedure?"
-        ):
+        to destroy the gui and raise the error to top level"""
+        if mbox.askokcancel("ABORT", "Do you want to abort the DESTEST comparison procedure?"):
             raise Abort_exception("The user aborted the procedure.")
 
     gui.protocol("WM_DELETE_WINDOW", on_closing)
 
     "Change exception handler of tkinter"
-
     def show_error(self, *args):
         nonlocal gui
         gui.destroy()
@@ -1004,9 +892,7 @@ def prompt_user_case_characteristics_network(echo=False):
     gui.title("Select Network Case Characteristics")
     screen_width = gui.winfo_screenwidth()
     screen_height = gui.winfo_screenheight()
-    gui.geometry(
-        "420x130+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125)
-    )  # Adjust window size as a function of screen resolution
+    gui.geometry("420x130+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window size as a function of screen resolution
     gui.lift()  # Place on top of all Python windows
     gui.attributes("-topmost", True)  # Place on top of all windows (all the time)
     gui.attributes("-topmost", False)  # Disable on top all the time
@@ -1028,13 +914,9 @@ def prompt_user_case_characteristics_network(echo=False):
     def generate_filtering_code(selected_network_type):
 
         "Find the building_type_code in the selected_network_type"
-        pattern = (
-            "\[(.*?)\]"
-        )  # '\' to start the definition of the regular expression; (.*?) for including anything in between
+        pattern = ("\[(.*?)\]")  # '\' to start the definition of the regular expression; (.*?) for including anything in between
         target_string = selected_network_type
-        network_type_code = re.search(pattern, target_string).group(
-            1
-        )  # Wanted substring is in result group(1)
+        network_type_code = re.search(pattern, target_string).group(1)  # Wanted substring is in result group(1)
 
         "Create the filtering code to find the files in Github folder"
         filtering_code = network_type_code + ".csv"
@@ -1049,36 +931,28 @@ def prompt_user_case_characteristics_network(echo=False):
     "Pack the different buttons and labels on the GUI window"
 
     "Frame 1"
-    frame1 = tk.LabelFrame(
-        gui, text="Case Characteristics for DESTEST Comparison", width=400, height=60
-    )
+    frame1 = tk.LabelFrame(gui, text="Network Case Characteristics for DESTEST Comparison", width=400, height=60)
     frame1.pack(padx=10, pady=10)
-    frame1.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame1.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Dropdown selection menu for building type"
-    options_network_types = ["Exercise 1 [Network_1]", "Exercise 2 [Network_2]"]
+    options_network_types = [
+        "Exercise 1 [Network_1]",
+        "Exercise 2 [Network_2]"]
 
     selected_network_type = StringVar()
     selected_network_type.set(options_network_types[0])
 
-    dropdown_building_type = tk.OptionMenu(
-        frame1, selected_network_type, *options_network_types
-    )
+    dropdown_building_type = tk.OptionMenu(frame1, selected_network_type, *options_network_types)
     dropdown_building_type.pack(padx=30, pady=(5, 10))
 
     "Frame 2"
     frame2 = tk.LabelFrame(gui, width=400, height=42)
     frame2.pack(padx=10, pady=0)
-    frame2.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame2.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Confirm button"
-    confirm_button = tk.Button(
-        frame2, text="Confirm Selections", command=lambda: confirm_selection()
-    )  # Create button executing function
+    confirm_button = tk.Button(frame2, text="Confirm Selections", command=lambda: confirm_selection())  # Create button executing function
     confirm_button.pack(padx=30, pady=5)
 
     "Generate a mainLoop to activate the gui"
@@ -1087,9 +961,7 @@ def prompt_user_case_characteristics_network(echo=False):
     # Outputs of GUI ##########################################################
 
     "Output of GUI once closed"
-    filtering_code, parameter_file_name = generate_filtering_code(
-        selected_network_type.get()
-    )
+    filtering_code, parameter_file_name = generate_filtering_code(selected_network_type.get())
 
     if echo:
         print("\nThe selected filtering parameters are:\n", selected_network_type.get())
@@ -1103,14 +975,12 @@ def prompt_user_case_characteristics_network(echo=False):
 ###                            Extract parameters                           ###
 ###############################################################################
 
-
 def load_parameters(
     server_info,
     parameter_file_name,
     list_implemented_KPIs,
     list_parameters_to_find,
-    echo=False,
-):
+    echo=False):
     """Define a parameter class and populate it with the different parameters
     extracted from the parameter file"""
 
@@ -1120,7 +990,6 @@ def load_parameters(
     gui = tk.Tk()  # Create a new window (widget, root, object)
 
     "Change exception handler of tkinter"
-
     def show_error(self, *args):
         nonlocal gui
         gui.destroy()
@@ -1128,7 +997,6 @@ def load_parameters(
         return
 
     "Change closing wnidow handling"
-
     def no_closing():
         pass  # Does nothing if window is closed by user
 
@@ -1139,9 +1007,7 @@ def load_parameters(
     gui.title("Loading")
     screen_width = gui.winfo_screenwidth()
     screen_height = gui.winfo_screenheight()
-    gui.geometry(
-        "400x80+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125)
-    )  # Adjust window size as a function of screen resolution
+    gui.geometry("400x80+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window size as a function of screen resolution
     gui.lift()  # Place on top of all Python windows
     gui.attributes("-topmost", True)  # Place on top of all windows (all the time)
     gui.attributes("-topmost", False)  # Disable on top all the time
@@ -1150,20 +1016,14 @@ def load_parameters(
     "Frame 1"
     frame1 = tk.LabelFrame(gui, width=400, height=70)
     frame1.pack(padx=10, pady=10)
-    frame1.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame1.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Display message as label on GUI"
-    my_label = tk.Label(
-        frame1, text="Loading DESTEST parameters: Please wait."
-    )  # Pack the name of the file on the window
+    my_label = tk.Label(frame1, text="Loading DESTEST parameters: Please wait.")  # Pack the name of the file on the window
     my_label.pack()
 
     "Init progess bar"
-    progress = Progressbar(
-        frame1, orient=HORIZONTAL, length=200, mode="determinate"
-    )  # New horizontal progress bar in determinate (normal) mode
+    progress = Progressbar(frame1, orient=HORIZONTAL, length=200, mode="determinate")  # New horizontal progress bar in determinate (normal) mode
     progress.pack(pady=5)
     progress["value"] = 5
     gui.update_idletasks()
@@ -1177,8 +1037,7 @@ def load_parameters(
         list_implemented_KPIs,
         server_info,
         list_parameters_to_find,
-        echo=False,
-    ):
+        echo=False):
 
         "Init empty validity vector"
         validity_vect = []  # Empty vector to store all results from the validity tests
@@ -1194,8 +1053,7 @@ def load_parameters(
         try:
             "Create full path for parameter file"
             full_path_and_name_file = get_full_path_to_online_file(
-                file_path_and_name, server_info, echo
-            )
+                file_path_and_name, server_info, echo)
 
             "Load the file into df"
             df = pd.read_csv(full_path_and_name_file, sep="\t", header=None)
@@ -1206,16 +1064,12 @@ def load_parameters(
                 print(df)
 
         except:
-            print(
-                "\nThe selected file cannot be read correctly.\nThe selected file is not valid."
-            )
+            print("\nThe selected file cannot be read correctly.\nThe selected file is not valid.")
             return validity_file, full_path_and_name_file
 
         try:
             "First, check that right length list in parameter file df"
-            test_result = len(list_parameters_to_find) == len(
-                list_parameters_name
-            ) and len(list_parameters_to_find) == len(list_parameters_value)
+            test_result = len(list_parameters_to_find) == len(list_parameters_name) and len(list_parameters_to_find) == len(list_parameters_value)
             validity_vect.append(test_result)
 
             "Find each element of list_parameters_to_find in list_parameters_name"
@@ -1224,16 +1078,13 @@ def load_parameters(
                 test_result = (
                     parameter in list_parameters_name
                     and list_parameters_value[index] != ""
-                    and str(list_parameters_value[index]) != "nan"
-                )
+                    and str(list_parameters_value[index]) != "nan")
                 validity_vect.append(test_result)
 
             "Check that the list of column names has same length as number of data columns"
             index = list_parameters_name.index("list of column names:")
             list_column_names = list_parameters_value[index]  # Raw data string
-            list_column_names = list_column_names.split(
-                ","
-            )  # Split by comma and place in a list
+            list_column_names = list_column_names.split(",")  # Split by comma and place in a list
 
             index = list_parameters_name.index("number of data columns:")
             nbr_data_column = list_parameters_value[index]  # Raw data string
@@ -1252,17 +1103,14 @@ def load_parameters(
             "Check that length list KPIs is same as list KPI_weights"
             index = list_parameters_name.index("list of default KPI_weights:")
             list_KPI_weights = list_parameters_value[index]  # Raw data string
-            list_KPI_weights = list_KPI_weights.split(
-                ","
-            )  # Split by comma and place in a list
+            list_KPI_weights = list_KPI_weights.split(",")  # Split by comma and place in a list
             test_result = len(list_KPI_weights) == len(list_KPIs)
             validity_vect.append(test_result)
 
             "Check that all elements in list KPI_weights are floats and larger than 0"
             try:
                 test_result = all(
-                    np.array(list(map(float, list_KPI_weights))) > 0
-                )  # Check if all elements in converted list are greater than 0
+                    np.array(list(map(float, list_KPI_weights))) > 0)  # Check if all elements in converted list are greater than 0
             except:  # if the list is not only float or int, there will be an error raised
                 test_result = False
                 print("error test")
@@ -1273,9 +1121,7 @@ def load_parameters(
             index = list_parameters_name.index("start date time:")
             start_date_time = list_parameters_value[index]  # Raw data string
             try:
-                start_date_time = np.datetime64(start_date_time).astype(
-                    datetime
-                )  # Try to convert into datetime format
+                start_date_time = np.datetime64(start_date_time).astype(datetime)  # Try to convert into datetime format
                 test_result = type(start_date_time) == datetime
             except:  # not a proper datetime input, there will be an error
                 test_result = False
@@ -1286,9 +1132,7 @@ def load_parameters(
             "Check that the list typical days is not empty"
             index = list_parameters_name.index("list typical days:")
             list_typical_days = list_parameters_value[index]  # Raw data string
-            list_typical_days = list_typical_days.split(
-                ","
-            )  # Split by comma and place in a list
+            list_typical_days = list_typical_days.split(",")  # Split by comma and place in a list
             test_result = len(list_typical_days) > 0
             validity_vect.append(test_result)
 
@@ -1325,9 +1169,7 @@ def load_parameters(
 
             for file in res["tree"]:  # Get all the tree (files)
                 file_sub_path = file["path"]  # Get path of the file
-                if (
-                    ".txt" in file_sub_path
-                ):  # Check if .txt (the only valid ones for parameter files)
+                if (".txt" in file_sub_path):  # Check if .txt (the only valid ones for parameter files)
                     list_txt_files_in_online_folder.append(file_sub_path)
 
             if len(list_txt_files_in_online_folder) == 0:
@@ -1337,38 +1179,24 @@ def load_parameters(
 
             else:
                 if echo:
-                    print(
-                        "\nList of valid txt files among which looking for parameter file:\n"
-                    )
+                    print("\nList of valid txt files among which looking for parameter file:\n")
                     print(list_txt_files_in_online_folder)
         except:
             raise
 
         "Find the exact parameter file in the folder"
         try:
-            list_parameter_files = list(
-                filter(
-                    lambda k: parameter_file_name in k, list_txt_files_in_online_folder
-                )
-            )
+            list_parameter_files = list(filter(lambda k: parameter_file_name in k, list_txt_files_in_online_folder))
 
             if len(list_parameter_files) == 0:
                 if echo:
-                    print(
-                        "\nThe parameter file could not be found in the online folder."
-                    )
-                raise Exception(
-                    "The parameter file could not be found in the online folder."
-                )
+                    print("\nThe parameter file could not be found in the online folder.")
+                raise Exception("The parameter file could not be found in the online folder.")
 
             elif len(list_parameter_files) > 1:
                 if echo:
-                    print(
-                        "\nMultiple similar parameter files found in the online folder."
-                    )
-                raise Exception(
-                    "Multiple similar parameter files found in the online folder."
-                )
+                    print("\nMultiple similar parameter files found in the online folder.")
+                raise Exception("Multiple similar parameter files found in the online folder.")
 
             else:
                 file_path_and_name = list_parameter_files[0]
@@ -1385,9 +1213,7 @@ def load_parameters(
 
     "Get parameter file from online folder"
     try:
-        file_path_and_name = find_path_parameter_file(
-            server_info, parameter_file_name, echo
-        )
+        file_path_and_name = find_path_parameter_file(server_info, parameter_file_name, echo)
     except:
         gui.destroy()
         raise Exception("The parameter file could not be found in the online folder.")
@@ -1399,8 +1225,7 @@ def load_parameters(
             list_implemented_KPIs,
             server_info,
             list_parameters_to_find,
-            echo,
-        )
+            echo)
         if not validity_file:
             gui.destroy()
             raise Exception("The parameter file is not valid.")
@@ -1419,109 +1244,78 @@ def load_parameters(
         gui.update_idletasks()
 
         "Parameters from the parameter file"
-        index = df_parameters[
-            df_parameters[0] == "number of data columns:"
-        ].first_valid_index()
+        index = df_parameters[df_parameters[0] == "number of data columns:"].first_valid_index()
         nbr_data_column = int(df_parameters.iloc[index, 1])  # Convert into integer
 
         "Update progress bar"
         progress["value"] = 20
         gui.update_idletasks()
 
-        index = df_parameters[
-            df_parameters[0] == "length header data files (number of lines):"
-        ].first_valid_index()
+        index = df_parameters[df_parameters[0] == "length header data files (number of lines):"].first_valid_index()
         header_length = int(df_parameters.iloc[index, 1])  # Convert into integer
 
         "Update progress bar"
         progress["value"] = 30
         gui.update_idletasks()
 
-        index = df_parameters[
-            df_parameters[0] == "first data line (line number):"
-        ].first_valid_index()
+        index = df_parameters[df_parameters[0] == "first data line (line number):"].first_valid_index()
         first_line_data = int(df_parameters.iloc[index, 1])  # Convert into integer
 
         "Update progress bar"
         progress["value"] = 40
         gui.update_idletasks()
 
-        index = df_parameters[
-            df_parameters[0] == "number of data rows:"
-        ].first_valid_index()
+        index = df_parameters[df_parameters[0] == "number of data rows:"].first_valid_index()
         nbr_data_rows = int(df_parameters.iloc[index, 1])  # Convert into integer
 
         "Update progress bar"
         progress["value"] = 50
         gui.update_idletasks()
 
-        index = df_parameters[
-            df_parameters[0] == "list of column names:"
+        index = df_parameters[df_parameters[0] == "list of column names:"
         ].first_valid_index()
         list_column_names = df_parameters.iloc[index, 1]  # Raw data string
-        list_column_names = list_column_names.split(
-            ","
-        )  # Split by comma and place in a list
+        list_column_names = list_column_names.split(",")  # Split by comma and place in a list
 
         "Update progress bar"
         progress["value"] = 60
         gui.update_idletasks()
 
-        index = df_parameters[
-            df_parameters[0] == "list of default KPIs:"
-        ].first_valid_index()
+        index = df_parameters[df_parameters[0] == "list of default KPIs:"].first_valid_index()
         list_default_KPIs = df_parameters.iloc[index, 1]  # Raw data string
-        list_default_KPIs = list_default_KPIs.split(
-            ","
-        )  # Split by comma and place in a list
+        list_default_KPIs = list_default_KPIs.split(",")  # Split by comma and place in a list
 
         "Update progress bar"
         progress["value"] = 70
         gui.update_idletasks()
 
-        index = df_parameters[
-            df_parameters[0] == "list of default KPI_weights:"
-        ].first_valid_index()
+        index = df_parameters[df_parameters[0] == "list of default KPI_weights:"].first_valid_index()
         list_default_KPI_weights = df_parameters.iloc[index, 1]  # Raw data string
-        list_default_KPI_weights = list_default_KPI_weights.split(
-            ","
-        )  # Split by comma and place in a list
-        list_default_KPI_weights = list(
-            map(float, list_default_KPI_weights)
-        )  # Convert list of str into list of float
+        list_default_KPI_weights = list_default_KPI_weights.split(",")  # Split by comma and place in a list
+        list_default_KPI_weights = list(map(float, list_default_KPI_weights))  # Convert list of str into list of float
 
         "Update progress bar"
         progress["value"] = 80
         gui.update_idletasks()
 
-        index = df_parameters[
-            df_parameters[0] == "sampling time interval [sec]:"
-        ].first_valid_index()
+        index = df_parameters[df_parameters[0] == "sampling time interval [sec]:"].first_valid_index()
         sampling_time = int(df_parameters.iloc[index, 1])  # Convert into integer
 
         "Update progress bar"
         progress["value"] = 90
         gui.update_idletasks()
 
-        index = df_parameters[
-            df_parameters[0] == "start date time:"
-        ].first_valid_index()
+        index = df_parameters[df_parameters[0] == "start date time:"].first_valid_index()
         start_date_time = df_parameters.iloc[index, 1]  # Raw data string
-        start_date_time = np.datetime64(start_date_time).astype(
-            datetime
-        )  # Try to convert into datetime format
+        start_date_time = np.datetime64(start_date_time).astype(datetime)  # Try to convert into datetime format
 
         "Update progress bar"
         progress["value"] = 95
         gui.update_idletasks()
 
-        index = df_parameters[
-            df_parameters[0] == "list typical days:"
-        ].first_valid_index()
+        index = df_parameters[df_parameters[0] == "list typical days:"].first_valid_index()
         list_typical_days = df_parameters.iloc[index, 1]  # Raw data string
-        list_typical_days = list_typical_days.split(
-            ","
-        )  # Split by comma and place in a list
+        list_typical_days = list_typical_days.split(",")  # Split by comma and place in a list
 
         "Load parameters into parameters class"
         parameters.nbr_data_column = nbr_data_column
@@ -1531,13 +1325,9 @@ def load_parameters(
         parameters.list_column_names = list_column_names
         parameters.list_default_KPIs = list_default_KPIs
         parameters.list_default_KPI_weights = list_default_KPI_weights
-        parameters.sampling_time = (
-            sampling_time
-        )  # [sec] Time interval in between 2 consecutive measurement points
+        parameters.sampling_time = (sampling_time)  # [sec] Time interval in between 2 consecutive measurement points
         parameters.start_date_time = start_date_time  # Type Datetime
-        parameters.list_typical_days = (
-            list_typical_days
-        )  # Only date stamp without time stamp
+        parameters.list_typical_days = (list_typical_days)  # Only date stamp without time stamp
 
         "Update progress bar"
         progress["value"] = 100
@@ -1571,7 +1361,6 @@ def check_validity_DESTEST_folder(filtering_code, parameters, server_info, echo=
     gui = tk.Tk()  # Create a new window (widget, root, object)
 
     "Change exception handler of tkinter"
-
     def show_error(self, *args):
         nonlocal gui
         gui.destroy()
@@ -1584,9 +1373,7 @@ def check_validity_DESTEST_folder(filtering_code, parameters, server_info, echo=
     gui.title("Checking validity")
     screen_width = gui.winfo_screenwidth()
     screen_height = gui.winfo_screenheight()
-    gui.geometry(
-        "400x80+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125)
-    )  # Adjust window size as a function of screen resolution
+    gui.geometry("400x80+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window size as a function of screen resolution
     gui.lift()  # Place on top of all Python windows
     gui.attributes("-topmost", True)  # Place on top of all windows (all the time)
     gui.attributes("-topmost", False)  # Disable on top all the time
@@ -1595,20 +1382,14 @@ def check_validity_DESTEST_folder(filtering_code, parameters, server_info, echo=
     "Frame 1"
     frame1 = tk.LabelFrame(gui, width=400, height=70)
     frame1.pack(padx=10, pady=10)
-    frame1.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame1.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Display message as label on GUI"
-    my_label = tk.Label(
-        frame1, text="Checking validity online DESTEST repository: Please wait."
-    )  # Pack the name of the file on the window
+    my_label = tk.Label(frame1, text="Checking validity online DESTEST repository: Please wait.")  # Pack the name of the file on the window
     my_label.pack()
 
     "Init progess bar"
-    progress = Progressbar(
-        frame1, orient=HORIZONTAL, length=200, mode="determinate"
-    )  # New horizontal progress bar in determinate (normal) mode
+    progress = Progressbar(frame1, orient=HORIZONTAL, length=200, mode="determinate")  # New horizontal progress bar in determinate (normal) mode
     progress.pack(pady=5)
     progress["value"] = 0
     gui.update_idletasks()
@@ -1643,18 +1424,14 @@ def check_validity_DESTEST_folder(filtering_code, parameters, server_info, echo=
 
             else:
                 if echo:
-                    print(
-                        "\nList of valid  files among which looking for data files:\n"
-                    )
+                    print("\nList of valid  files among which looking for data files:\n")
                     print(list_files_in_online_folder)
         except:
             raise
 
         "Find the targeted data files in the folder"
         try:
-            list_filtered_data_files = list(
-                filter(lambda k: filtering_code in k, list_files_in_online_folder)
-            )
+            list_filtered_data_files = list(filter(lambda k: filtering_code in k, list_files_in_online_folder))
 
             if len(list_filtered_data_files) == 0:  # No data files in the repository
                 if echo:
@@ -1686,7 +1463,7 @@ def check_validity_DESTEST_folder(filtering_code, parameters, server_info, echo=
         "Init output variables"
         validity_folder = False
         list_filtered_data_files = []
-        valid_file_full_path_url = ""
+        valid_file_full_path_urll = ""
         number_files = 0
         df = pd.DataFrame()
 
@@ -1694,13 +1471,10 @@ def check_validity_DESTEST_folder(filtering_code, parameters, server_info, echo=
         try:
             "List of data files corresponding to the filtering code"
             list_filtered_data_files = find_path_filtered_data_files(
-                server_info, filtering_code, echo
-            )
+                server_info, filtering_code, echo)
 
             if len(list_filtered_data_files) == 0:  # No data files in the repository
-                raise Exception(
-                    "No data files could be found in the online repository."
-                )  # Get out of the function
+                raise Exception("No data files could be found in the online repository.")  # Get out of the function
 
         except:
             validity_folder = False
@@ -1710,8 +1484,7 @@ def check_validity_DESTEST_folder(filtering_code, parameters, server_info, echo=
                 df,
                 list_filtered_data_files,
                 number_files,
-                valid_file_full_path_url,
-            )
+                valid_file_full_path_urll)
 
         else:  # If some files, then start looping validity tests
             number_files = len(list_filtered_data_files)
@@ -1724,16 +1497,13 @@ def check_validity_DESTEST_folder(filtering_code, parameters, server_info, echo=
 
                 try:
                     "Create full path for parameter file"
-                    full_path_and_name_file = get_full_path_to_online_file(
-                        f, server_info, echo
-                    )
+                    full_path_and_name_file = get_full_path_to_online_file(f, server_info, echo)
 
                     df = pd.read_csv(
                         full_path_and_name_file,
                         sep=",",
                         header=None,
-                        skiprows=parameters.first_line_data - 1,
-                    )
+                        skiprows=parameters.first_line_data - 1)
 
                     "Rename the columns of the dataframe"
                     df.columns = parameters.list_column_names
@@ -1748,9 +1518,7 @@ def check_validity_DESTEST_folder(filtering_code, parameters, server_info, echo=
                         print("File: ", f, " can be read correctly.")
 
                     try:  # Validity test of the data in the file
-                        validity_vect = (
-                            []
-                        )  # Empty vector to store all results from the validity tests
+                        validity_vect = []  # Empty vector to store all results from the validity tests
 
                         "Check if any NaN in the data file"
                         test_result = df.isnull().sum().sum() == 0
@@ -1765,36 +1533,26 @@ def check_validity_DESTEST_folder(filtering_code, parameters, server_info, echo=
                         validity_vect.append(test_result)
 
                         "Check that sampling time is correct in all elapsed time column"
-                        sub_df = pd.Series.tolist(
-                            df.iloc[:, 0]
-                        )  # Get the first column containing the elapsed time
+                        sub_df = pd.Series.tolist(df.iloc[:, 0])  # Get the first column containing the elapsed time
                         sub_df1 = sub_df[1:]  # From second element to the last one
-                        sub_df2 = sub_df[
-                            0:-1
-                        ]  # From first element to the one before the last one
+                        sub_df2 = sub_df[0:-1]  # From first element to the one before the last one
                         delta_df = list(np.array(sub_df1) - np.array(sub_df2))
-                        test_result = (
-                            len(set(delta_df)) == 1
-                        )  # Check that the length of the set (list of unique elements in a list) is equal to 1
+                        test_result = (len(set(delta_df)) == 1)  # Check that the length of the set (list of unique elements in a list) is equal to 1
                         validity_vect.append(test_result)
 
                         "Finally, check that all validity tests are True"
-                        validity_file = all(
-                            validity_vect
-                        )  # AND operator on all list elements
+                        validity_file = all(validity_vect)  # AND operator on all list elements
 
                     except:
                         validity_file = False
 
                 finally:
-                    if (
-                        validity_file
-                    ):  # The first valid file has been found and thus stop the loop and ends the function with return
+                    if validity_file:  # The first valid file has been found and thus stop the loop and ends the function with return
                         if echo:
                             print("File ", f, " is valid.")
 
                         validity_folder = True
-                        valid_file_full_path_url = full_path_and_name_file
+                        valid_file_full_path_urll = full_path_and_name_file
 
                         progress["value"] = 100
                         gui.update_idletasks()
@@ -1805,8 +1563,7 @@ def check_validity_DESTEST_folder(filtering_code, parameters, server_info, echo=
                             df,
                             list_filtered_data_files,
                             number_files,
-                            valid_file_full_path_url,
-                        )
+                            valid_file_full_path_urll)
 
                     else:  # If hte current file is not valid then loop to the next one in line
                         if echo:
@@ -1826,30 +1583,27 @@ def check_validity_DESTEST_folder(filtering_code, parameters, server_info, echo=
             df,
             list_filtered_data_files,
             number_files,
-            valid_file_full_path_url,
-        )  # The file return of the function if reached only if no valid file have been found in the selected folder
+            valid_file_full_path_urll)  # The file return of the function if reached only if no valid file have been found in the selected folder
 
     # End sub-function ########################################################
 
     # Sub-function: Format valid  df ##########################################
+    
     "Add time stamp column to the df_valid"
 
     def format_valid_df(df, parameters, echo=False):
 
         if echo:
-            print(
-                "\nFormat the df of the valid data file that has been found in the online repository.\n"
-            )
+            print("\nFormat the df of the valid data file that has been found in the online repository.\n")
 
         # Parameters ##########################################################
 
         start = parameters.start_date_time
-        end = start + timedelta(
-            seconds=(parameters.sampling_time * (parameters.nbr_data_rows - 1))
-        )
+        end = start + timedelta(seconds=(parameters.sampling_time * (parameters.nbr_data_rows - 1)))
         time_step_sec = parameters.sampling_time  # [sec]
 
         # Sub-Sub Function: Generate time stamp ###############################
+        
         def datetime_range(start, end, delta):
             current = start
             if not isinstance(delta, timedelta):
@@ -1864,9 +1618,7 @@ def check_validity_DESTEST_folder(filtering_code, parameters, server_info, echo=
         output_list = []
 
         # this unlocks the following interface:
-        for dt in datetime_range(
-            start, end, {"seconds": time_step_sec}
-        ):  # Generate the list of time stamps
+        for dt in datetime_range(start, end, {"seconds": time_step_sec}):  # Generate the list of time stamps
             output_list.append(dt)
 
         formated_list = pd.to_datetime(output_list)
@@ -1875,18 +1627,14 @@ def check_validity_DESTEST_folder(filtering_code, parameters, server_info, echo=
             print(formated_list)
 
         "Create a new df to be added to the valid_df to add the time stamp column"
-        new_df = pd.DataFrame(
-            formated_list, columns=["Date and Time"]
-        )  # Assign name to the column header in the new df
+        new_df = pd.DataFrame(formated_list, columns=["Date and Time"])  # Assign name to the column header in the new df
 
         "Concatenate the new_df and the valid df"
         frames = [new_df, df]  # The 2 df to concat
         df_valid = pd.concat(frames, axis=1, join="outer")  # Concat columns
 
         if echo:
-            print(
-                "\nThe formated df of the first file found in the online repository is:\n"
-            )
+            print("\nThe formated df of the first file found in the online repository is:\n")
             print(df_valid)
 
         return df_valid
@@ -1896,28 +1644,24 @@ def check_validity_DESTEST_folder(filtering_code, parameters, server_info, echo=
     # Main ####################################################################
 
     try:
-        validity_folder, df, list_filtered_data_files, number_files, valid_file_full_path_url = check_validity_repository(
-            filtering_code, parameters, server_info, echo
-        )
+        validity_folder, df, list_filtered_data_files, number_files, valid_file_full_path_urll = check_validity_repository(
+            filtering_code, parameters, server_info, echo)
 
     except:
         gui.destroy()
         raise
 
     else:
-        # Outputs of GUI ##########################################################
+        # Outputs of GUI ######################################################
 
         if validity_folder:
             "Make df_valid for output: add time stamp column"
             df_valid = format_valid_df(df, parameters, echo)
 
             message = (
-                str(
-                    "Valid data has been found in the online DESTEST repository among the "
-                )
+                "Valid data has been found in the online DESTEST repository among the "
                 + str(number_files)
-                + " files."
-            )
+                + " files.")
             if echo:
                 print("\n", message)
             mbox.showinfo("Success", message)
@@ -1926,14 +1670,12 @@ def check_validity_DESTEST_folder(filtering_code, parameters, server_info, echo=
                 validity_folder,
                 df_valid,
                 list_filtered_data_files,
-                valid_file_full_path_url,
-            )  # change it with the right column names according to parameters
+                valid_file_full_path_urll)  # change it with the right column names according to parameters
         else:
             message = (
                 "No valid data has been found in the online DESTEST repository among the "
                 + str(number_files)
-                + " files."
-            )
+                + " files.")
             if echo:
                 print("\n", message)
             mbox.showerror("Error", message)
@@ -1942,14 +1684,12 @@ def check_validity_DESTEST_folder(filtering_code, parameters, server_info, echo=
                 validity_folder,
                 df_valid,
                 list_filtered_data_files,
-                valid_file_full_path_url,
-            )  # change it with the right column names according to parameters
+                valid_file_full_path_urll)  # change it with the right column names according to parameters
 
 
 ###############################################################################
 ###                           Load DESTEST data                             ###
 ###############################################################################
-
 
 def load_DESTEST_data(
     list_filtered_data_files,
@@ -1957,8 +1697,7 @@ def load_DESTEST_data(
     server_info,
     parameters,
     df_valid,
-    echo=False,
-):
+    echo=False):
     """loop through all files in the folder, try to open them and check
     validity and load them into dataframe if valid.
     """
@@ -1968,7 +1707,6 @@ def load_DESTEST_data(
     gui = tk.Tk()  # Create a new window (widget, root, object)
 
     "Change exception handler of tkinter"
-
     def show_error(self, *args):
         nonlocal gui
         gui.destroy()
@@ -1981,9 +1719,7 @@ def load_DESTEST_data(
     gui.title("Loading data")
     screen_width = gui.winfo_screenwidth()
     screen_height = gui.winfo_screenheight()
-    gui.geometry(
-        "400x80+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125)
-    )  # Adjust window size as a function of screen resolution
+    gui.geometry("400x80+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window size as a function of screen resolution
     gui.lift()  # Place on top of all Python windows
     gui.attributes("-topmost", True)  # Place on top of all windows (all the time)
     gui.attributes("-topmost", False)  # Disable on top all the time
@@ -1992,20 +1728,14 @@ def load_DESTEST_data(
     "Frame 1"
     frame1 = tk.LabelFrame(gui, width=400, height=70)
     frame1.pack(padx=10, pady=10)
-    frame1.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame1.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Display message as label on GUI"
-    my_label = tk.Label(
-        frame1, text="Loading DESTEST data: Please wait."
-    )  # Pack the name of the file on the window
+    my_label = tk.Label(frame1, text="Loading DESTEST data: Please wait.")  # Pack the name of the file on the window
     my_label.pack()
 
     "Init progess bar"
-    progress = Progressbar(
-        frame1, orient=HORIZONTAL, length=200, mode="determinate"
-    )  # New horizontal progress bar in determinate (normal) mode
+    progress = Progressbar(frame1, orient=HORIZONTAL, length=200, mode="determinate")  # New horizontal progress bar in determinate (normal) mode
     progress.pack(pady=5)
     progress["value"] = 0
     gui.update_idletasks()
@@ -2016,9 +1746,7 @@ def load_DESTEST_data(
         print("\nStart loading DESTEST data files.")
 
     "Init output df with all DESTEST data"
-    df_DESTEST_data = df_valid.iloc[
-        :, 0:2
-    ]  # Select all lines of 1st and 2nd column of a valid df: time stamp and time in sec
+    df_DESTEST_data = df_valid.iloc[:, 0:2]  # Select all lines of 1st and 2nd column of a valid df: time stamp and time in sec
 
     if echo:
         print("\nStarting df_DESTEST_data is:\n")
@@ -2036,8 +1764,7 @@ def load_DESTEST_data(
         print(
             "\n",
             number_files,
-            " data files corresponding to the case characteristics are present in the online DESTEST repository.",
-        )
+            " data files corresponding to the case characteristics are present in the online DESTEST repository.")
 
     "Loop through files"
     for index, f in enumerate(list_filtered_data_files):
@@ -2057,8 +1784,7 @@ def load_DESTEST_data(
                 full_path_and_name_file,
                 sep=",",
                 header=None,
-                skiprows=parameters.first_line_data - 1,
-            )
+                skiprows=parameters.first_line_data - 1)
 
             "Rename the columns of the dataframe"
             df.columns = parameters.list_column_names
@@ -2072,9 +1798,7 @@ def load_DESTEST_data(
                 print("File: ", f, " can be read correctly.")
 
             try:  # Validity test of the data in the file
-                validity_vect = (
-                    []
-                )  # Empty vector to store all results from the validity tests
+                validity_vect = []  # Empty vector to store all results from the validity tests
 
                 "Check if any NaN in the data file"
                 test_result = df.isnull().sum().sum() == 0
@@ -2089,17 +1813,11 @@ def load_DESTEST_data(
                 validity_vect.append(test_result)
 
                 "Check that sampling time is correct in all elapsed time column"
-                sub_df = pd.Series.tolist(
-                    df.iloc[:, 0]
-                )  # Get the first column containing the elapsed time
+                sub_df = pd.Series.tolist(df.iloc[:, 0])  # Get the first column containing the elapsed time
                 sub_df1 = sub_df[1:]  # From second element to the last one
-                sub_df2 = sub_df[
-                    0:-1
-                ]  # From first element to the one before the last one
+                sub_df2 = sub_df[0:-1]  # From first element to the one before the last one
                 delta_df = list(np.array(sub_df1) - np.array(sub_df2))
-                test_result = (
-                    len(set(delta_df)) == 1
-                )  # Check that the length of the set (list of unique elements in a list) is equal to 1
+                test_result = (len(set(delta_df)) == 1)  # Check that the length of the set (list of unique elements in a list) is equal to 1
                 validity_vect.append(test_result)
 
                 "Finally, check that all validity tests are True"
@@ -2116,27 +1834,17 @@ def load_DESTEST_data(
                 try:  # try to add the df data to DESTEST data
 
                     "Generate column names for new df with parameters and sufix from file name"
-                    if (
-                        ".csv" in f
-                    ):  # In principle, redundant because only .csv can make it to the list_filtered_data_files
+                    if (".csv" in f):  # In principle, redundant because only .csv can make it to the list_filtered_data_files
                         "remove filtering code and parent folders from name of the file"
                         full_string = f
                         target_prefix = "/"
                         target_sufix = "_" + filtering_code
 
-                        list_occ = [
-                            m.start() for m in re.finditer(target_prefix, full_string)
-                        ]  # Get all occurrences of the prefix
+                        list_occ = [m.start() for m in re.finditer(target_prefix, full_string)]  # Get all occurrences of the prefix
 
-                        substring = full_string[
-                            list_occ[-1]
-                            + len(target_prefix) : full_string.rfind(target_sufix)
-                        ]  # Start search from last occurrence of the prefix
+                        substring = full_string[list_occ[-1] + len(target_prefix) : full_string.rfind(target_sufix)]  # Start search from last occurrence of the prefix
 
-                        name = (
-                            substring
-                        )  # The name of hte case is the substring extracted from in between prefix and sufix
-
+                        name = substring  # The name of hte case is the substring extracted from in between prefix and sufix
                         sufix = " - " + name
 
                     else:
@@ -2152,13 +1860,8 @@ def load_DESTEST_data(
                     df = df.add_suffix(sufix)
 
                     "Concatenate new data from df to rest data in DESTEST data df (at the end)"
-                    frames = [
-                        df_DESTEST_data,
-                        df,
-                    ]  # Make a list with the new df and the DESTEST df
-                    df_DESTEST_data = pd.concat(
-                        frames, axis=1, join="outer"
-                    )  # Concatenate new df with the all_data df
+                    frames = [df_DESTEST_data, df]  # Make a list with the new df and the DESTEST df
+                    df_DESTEST_data = pd.concat(frames, axis=1, join="outer")  # Concatenate new df with the all_data df
 
                 except:  # error in loading into df
                     if echo:
@@ -2190,10 +1893,7 @@ def load_DESTEST_data(
 
     "GUI loading output"
     "Check that at least 1 file has been successfully loaded"
-    if (
-        successful_loaded_data_index > 0
-        and successful_loaded_data_index == number_files
-    ):
+    if (successful_loaded_data_index > 0 and successful_loaded_data_index == number_files):
         if echo:
             print("\nAll the DESTEST data has been correctly loaded:")
             print(df_DESTEST_data)
@@ -2203,17 +1903,14 @@ def load_DESTEST_data(
             + str(successful_loaded_data_index)
             + " files have been correctly loaded out of "
             + str(number_files)
-            + " filtered files in the online DESTEST repository."
-        )  # Give success rate of file loading
+            + " filtered files in the online DESTEST repository.")  # Give success rate of file loading
         mbox.showinfo("Success", message)
 
         gui.destroy()
 
         return df_DESTEST_data, list_DESTEST_cases
 
-    elif (
-        successful_loaded_data_index > 0 and successful_loaded_data_index < number_files
-    ):
+    elif (successful_loaded_data_index > 0 and successful_loaded_data_index < number_files):
         if echo:
             print("\nPart of the DESTEST data has been correctly loaded:")
             print(df_DESTEST_data)
@@ -2227,8 +1924,7 @@ def load_DESTEST_data(
             + str(number_files - successful_loaded_data_index)
             + " files in the repository correspond to the selected "
             + str(filtering_code)
-            + " case but are not valid."
-        )  # Give success rate of file loading
+            + " case but are not valid.")  # Give success rate of file loading
         mbox.showinfo("Success", message)
 
         gui.destroy()
@@ -2237,9 +1933,7 @@ def load_DESTEST_data(
 
     else:  # If no file has been successfully loaded, then raise an error
         if echo:
-            print(
-                "\nNo DESTEST file from the online repository has been correctly loaded"
-            )
+            print("\nNo DESTEST file from the online repository has been correctly loaded")
 
         gui.destroy()
         raise Exception("No DESTEST data has been correctly loaded")
@@ -2249,19 +1943,18 @@ def load_DESTEST_data(
 ###                       Prompt user for user data file                    ###
 ###############################################################################
 
-
 def prompt_user_for_user_data_file(
     parameters,
     server_info,
     full_path_file_parameter_file,
     filtering_code,
-    valid_file_full_path_ur,
-    echo=False,
-):
+    valid_file_full_path_url,
+    echo=False):
     """
     Generate a GUI to prompt user for a valid user test data file.
     Once a valid user test data file is found, the user can confirm selection.
     """
+    
     # Initialize GUI ##########################################################
 
     "Create the window"
@@ -2272,16 +1965,12 @@ def prompt_user_for_user_data_file(
     def on_closing():
         """if closing the window, raise exception to be caught by error handler 
         to destroy the gui and raise the error to top level"""
-
-        if mbox.askokcancel(
-            "ABORT", "Do you want to abort the DESTEST comparison procedure?"
-        ):
+        if mbox.askokcancel("ABORT", "Do you want to abort the DESTEST comparison procedure?"):
             raise Abort_exception("The user aborted the procedure.")
 
     gui.protocol("WM_DELETE_WINDOW", on_closing)
 
     "Change exception handler of tkinter"
-
     def show_error(self, *args):
         nonlocal gui
         gui.destroy()
@@ -2294,9 +1983,7 @@ def prompt_user_for_user_data_file(
     gui.title("Select the user data file")
     screen_width = gui.winfo_screenwidth()
     screen_height = gui.winfo_screenheight()
-    gui.geometry(
-        "420x357+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125)
-    )  # Adjust window size as a function of screen resolution
+    gui.geometry("420x357+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window size as a function of screen resolution
     gui.lift()  # Place on top of all Python windows
     gui.attributes("-topmost", True)  # Place on top of all windows (all the time)
     gui.attributes("-topmost", False)  # Disable on top all the time
@@ -2312,7 +1999,6 @@ def prompt_user_for_user_data_file(
     # Sub-function: check_validity_file #######################################
 
     "Verify that the selected file has appropriate data content"
-
     def check_validity_file(file_path_and_name, parameters, echo=False):
 
         "Init progress bar"
@@ -2333,18 +2019,17 @@ def prompt_user_for_user_data_file(
                 file_path_and_name,
                 sep=",",
                 header=None,
-                skiprows=parameters.first_line_data - 1,
-            )
+                skiprows=parameters.first_line_data - 1)
 
             "Update progress bar"
             progress["value"] = 20
             gui.update_idletasks()
+            
         except:
-            print(
-                "\nThe selected file cannot be read correctly.\nThe selected file is not valid."
-            )
+            print("\nThe selected file cannot be read correctly.\nThe selected file is not valid.")
             progress.pack_forget()
             return validity_file
+        
         else:  # Check validity of the file content
 
             if echo:
@@ -2377,17 +2062,11 @@ def prompt_user_for_user_data_file(
                 gui.update_idletasks()
 
                 "Check that sampling time is correct in all elapsed time column"
-                sub_df = pd.Series.tolist(
-                    df.iloc[:, 0]
-                )  # Get the first column containing the elapsed time
+                sub_df = pd.Series.tolist(df.iloc[:, 0])  # Get the first column containing the elapsed time
                 sub_df1 = sub_df[1:]  # From second element to the last one
-                sub_df2 = sub_df[
-                    0:-1
-                ]  # From first element to the one before the last one
+                sub_df2 = sub_df[0:-1]  # From first element to the one before the last one
                 delta_df = list(np.array(sub_df1) - np.array(sub_df2))
-                test_result = (
-                    len(set(delta_df)) == 1
-                )  # Check that the length of the set (list of unique elements in a list) is equal to 1
+                test_result = (len(set(delta_df)) == 1)  # Check that the length of the set (list of unique elements in a list) is equal to 1
                 validity_vect.append(test_result)
 
                 "Update progress bar"
@@ -2436,19 +2115,14 @@ def prompt_user_for_user_data_file(
             "Ask to choose file and get full path"
             file_path_and_name = filedialog.askopenfilename(
                 title="Select a data file",
-                filetypes=(("text files", "*.txt"), ("csv files", "*.csv")),
-            )
+                filetypes=(("text files", "*.txt"), ("csv files", "*.csv")))
 
             "Get just file name"
-            head, file_name = ntpath.split(
-                file_path_and_name
-            )  # Split between head and tail of the full file path
+            head, file_name = ntpath.split(file_path_and_name)  # Split between head and tail of the full file path
 
             "Display name selected file"
             if file_name:
-                file_name_str_var.set(
-                    file_name
-                )  # Update the name of the file on the window
+                file_name_str_var.set(file_name)  # Update the name of the file on the window
                 gui.update_idletasks()
 
                 if echo:
@@ -2456,12 +2130,11 @@ def prompt_user_for_user_data_file(
 
                 try:
                     "Verify validity selected file"
-                    validity_file = check_validity_file(
-                        file_path_and_name, parameters, echo
-                    )
+                    validity_file = check_validity_file(file_path_and_name, parameters, echo)
 
                 except:
                     validity_file = False
+                    
             else:
                 file_name_str_var.set("No file selected")
                 gui.update_idletasks()
@@ -2505,8 +2178,7 @@ def prompt_user_for_user_data_file(
             + str(parameters.list_column_names)
             + "\n"
             + "Sampling time interval [sec]: "
-            + str(parameters.sampling_time)
-        )
+            + str(parameters.sampling_time))
         mbox.showinfo("Valid format for the .txt or .csv data file", message)
 
     # End Sub-function ########################################################
@@ -2518,35 +2190,23 @@ def prompt_user_for_user_data_file(
     def download_format_data_file(full_path_file_parameter_file):
 
         try:
-            target_folder = filedialog.askdirectory(
-                title="Select a folder to save the file"
-            )
+            target_folder = filedialog.askdirectory(title="Select a folder to save the file")
 
             "Check if any folder path was selected"
             if target_folder:
-                r = requests.get(
-                    full_path_file_parameter_file
-                )  # Get content of the source file
-                head, file_name = ntpath.split(
-                    full_path_file_parameter_file
-                )  # Split between head and tail of the full file path
-                new_file_path = (
-                    target_folder + "/" + file_name
-                )  # Form the new file path with the same name as the original source file
+                r = requests.get(full_path_file_parameter_file)  # Get content of the source file
+                head, file_name = ntpath.split(full_path_file_parameter_file)  # Split between head and tail of the full file path
+                new_file_path = (target_folder + "/" + file_name)  # Form the new file path with the same name as the original source file
 
                 "Create the new file"
-                with open(
-                    new_file_path, "wb"
-                ) as file:  # "with" statement ensures proper acquisition and release of resources, it handles exception of the procedure, no need to file.close at the end
+                with open(new_file_path, "wb") as file:  # "with" statement ensures proper acquisition and release of resources, it handles exception of the procedure, no need to file.close at the end
                     file.write(r.content)
 
             else:
                 return
 
         except:
-            mbox.showerror(
-                "Error", "Oups !\nSomething went wrong !"
-            )  # Popup message window
+            mbox.showerror("Error", "Oups !\nSomething went wrong !")
 
     # End Sub-function ########################################################
 
@@ -2554,38 +2214,26 @@ def prompt_user_for_user_data_file(
 
     "Download the parameter file corresponding to the selected case type"
 
-    def download_example_correct_data_file(valid_file_full_path_ur):
+    def download_example_correct_data_file(valid_file_full_path_url):
 
         try:
-            target_folder = filedialog.askdirectory(
-                title="Select a folder to save the file"
-            )
+            target_folder = filedialog.askdirectory(title="Select a folder to save the file")
 
             "Check if any folder path was selected"
             if target_folder:
-                r = requests.get(
-                    valid_file_full_path_ur
-                )  # Get content of the source file
-                head, file_name = ntpath.split(
-                    valid_file_full_path_ur
-                )  # Split between head and tail of the full file path
-                new_file_path = (
-                    target_folder + "/" + file_name
-                )  # Form the new file path with the same name as the original source file
+                r = requests.get(valid_file_full_path_url)  # Get content of the source file
+                head, file_name = ntpath.split(valid_file_full_path_url)  # Split between head and tail of the full file path
+                new_file_path = (target_folder + "/" + file_name)  # Form the new file path with the same name as the original source file
 
                 "Create the new file"
-                with open(
-                    new_file_path, "wb"
-                ) as file:  # "with" statement ensures proper acquisition and release of resources, it handles exception of the procedure, no need to file.close at the end
+                with open(new_file_path, "wb") as file:  # "with" statement ensures proper acquisition and release of resources, it handles exception of the procedure, no need to file.close at the end
                     file.write(r.content)
 
             else:
                 return
 
         except:
-            mbox.showerror(
-                "Error", "Oups !\nSomething went wrong !"
-            )  # Popup message window
+            mbox.showerror("Error", "Oups !\nSomething went wrong !")
 
     # End Sub-function ########################################################
 
@@ -2599,6 +2247,7 @@ def prompt_user_for_user_data_file(
     # End Sub-function ########################################################
 
     # Sub-function: no_file_selection #########################################
+        
     def no_file_selection():
         nonlocal no_user_test
         no_user_test = True
@@ -2613,69 +2262,54 @@ def prompt_user_for_user_data_file(
         gui,
         text="Select your own data file (.txt or .csv) for the DESTEST comparison",
         width=400,
-        height=120,
-    )
+        height=120)
     frame1.pack(padx=10, pady=10)
-    frame1.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame1.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Select file button"
-    select_file_button = tk.Button(
-        frame1, text="Select User Data File", command=lambda: select_file(echo)
-    )  # Create button executing function
+    select_file_button = tk.Button(frame1, text="Select User Data File",
+        command=lambda: select_file(echo))  # Create button executing function
     select_file_button.pack(pady=5)  # Pack the button that executes the command
 
     "Display name selected file in GUI label"
-    my_label = tk.Label(
-        frame1, textvariable=file_name_str_var
-    )  # Pack the name of the file on the window
+    my_label = tk.Label(frame1, textvariable=file_name_str_var)  # Pack the name of the file on the window
     my_label.pack(pady=5)
 
     "Frame 2"
-    frame2 = tk.LabelFrame(
-        gui, text="Get Help to Format User Test Data File", width=400, height=127
-    )
+    frame2 = tk.LabelFrame(gui, text="Get Help to Format User Test Data File", width=400, height=127)
     frame2.pack(padx=10, pady=(0, 10))
-    frame2.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame2.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Data File Format button"
     show_data_file_format_button = tk.Button(
-        frame2, text="Show Data File Format", command=lambda: show_data_file_format()
-    )  # Create button executing function
+        frame2, text="Show Data File Format",
+        command=lambda: show_data_file_format())  # Create button executing function
     show_data_file_format_button.pack(pady=5)
 
     "Download data file format button"
     download_format_data_file_button = tk.Button(
         frame2,
         text="Download Data File Format",
-        command=lambda: download_format_data_file(full_path_file_parameter_file),
-    )  # Create button executing function
+        command=lambda: download_format_data_file(full_path_file_parameter_file))  # Create button executing function
     download_format_data_file_button.pack(pady=5)
 
     "Download example correct data file button"
     download_example_correct_data_file_button = tk.Button(
         frame2,
         text="Download Example Correct Data File",
-        command=lambda: download_example_correct_data_file(valid_file_full_path_ur),
-    )  # Create button executing function
+        command=lambda: download_example_correct_data_file(valid_file_full_path_url))  # Create button executing function
     download_example_correct_data_file_button.pack(pady=5)
 
     "Frame 3"
     frame3 = tk.LabelFrame(gui, width=400, height=88)
     frame3.pack(padx=10, pady=(0, 10))
-    frame3.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame3.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Confirm selection button"
     confirm_file_button = tk.Button(
         frame3,
         text="Confirm Selection and Continue",
-        command=lambda: confirm_selection(),
-    )  # Create button executing function
+        command=lambda: confirm_selection())  # Create button executing function
     confirm_file_button.pack(pady=5)
     confirm_file_button["state"] = "disabled"
 
@@ -2683,14 +2317,11 @@ def prompt_user_for_user_data_file(
     no_file_button = tk.Button(
         frame3,
         text="Continue Without User Data File",
-        command=lambda: no_file_selection(),
-    )  # Create button executing function
+        command=lambda: no_file_selection())  # Create button executing function
     no_file_button.pack(pady=(0, 5))
 
     "Progess bar"
-    progress = Progressbar(
-        frame1, orient=HORIZONTAL, length=200, mode="determinate"
-    )  # New horizontal progress bar in determinate (normal) mode
+    progress = Progressbar(frame1, orient=HORIZONTAL, length=200, mode="determinate")  # New horizontal progress bar in determinate (normal) mode
     progress.pack_forget()
 
     "Generate a mainLoop to activate the gui"
@@ -2703,20 +2334,14 @@ def prompt_user_for_user_data_file(
         file_path_and_name = "no file"
         return file_path_and_name, no_user_test
     elif validity_file:
-        return (
-            file_path_and_name,
-            no_user_test,
-        )  # change it with the right column names according to parameters
+        return (file_path_and_name, no_user_test)  # change it with the right column names according to parameters
     else:
-        raise Exception(
-            "No valid user test data file has been selected"
-        )  # Raising an Exception to generate and error. No need return after raise
+        raise Exception("No valid user test data file has been selected")  # Raising an Exception to generate and error. No need return after raise
 
 
 ###############################################################################
 ###                        Load user test data file                         ###
 ###############################################################################
-
 
 def load_user_test_data(user_test_data_file, parameters, no_user_test, echo=False):
 
@@ -2726,7 +2351,6 @@ def load_user_test_data(user_test_data_file, parameters, no_user_test, echo=Fals
     gui = tk.Tk()  # Create a new window (widget, root, object)
 
     "Change exception handler of tkinter"
-
     def show_error(self, *args):
         nonlocal gui
         gui.destroy()
@@ -2737,9 +2361,7 @@ def load_user_test_data(user_test_data_file, parameters, no_user_test, echo=Fals
 
     "In the case of no user test data for DESTEST comparison"
     if no_user_test:  # No user test data
-        message = str(
-            "The DESTEST comparison will be conducted without user test data."
-        )
+        message = "The DESTEST comparison will be conducted without user test data."
         gui.withdraw()
         mbox.showinfo("Warning", message)  # Popup message window
         gui.destroy()
@@ -2752,9 +2374,7 @@ def load_user_test_data(user_test_data_file, parameters, no_user_test, echo=Fals
     gui.title("Loading")
     screen_width = gui.winfo_screenwidth()
     screen_height = gui.winfo_screenheight()
-    gui.geometry(
-        "400x80+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125)
-    )  # Adjust window size as a function of screen resolution
+    gui.geometry("400x80+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window size as a function of screen resolution
     gui.lift()  # Place on top of all Python windows
     gui.attributes("-topmost", True)  # Place on top of all windows (all the time)
     gui.attributes("-topmost", False)  # Disable on top all the time
@@ -2763,20 +2383,14 @@ def load_user_test_data(user_test_data_file, parameters, no_user_test, echo=Fals
     "Frame 1"
     frame1 = tk.LabelFrame(gui, width=400, height=70)
     frame1.pack(padx=10, pady=10)
-    frame1.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame1.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Display message as label on GUI"
-    my_label = tk.Label(
-        frame1, text="Loading user test data: Please wait."
-    )  # Pack the name of the file on the window
+    my_label = tk.Label(frame1, text="Loading user test data: Please wait.")  # Pack the name of the file on the window
     my_label.pack()
 
     "Init progess bar"
-    progress = Progressbar(
-        frame1, orient=HORIZONTAL, length=200, mode="determinate"
-    )  # New horizontal progress bar in determinate (normal) mode
+    progress = Progressbar(frame1, orient=HORIZONTAL, length=200, mode="determinate")  # New horizontal progress bar in determinate (normal) mode
     progress.pack(pady=5)
     progress["value"] = 10
     gui.update_idletasks()
@@ -2789,8 +2403,7 @@ def load_user_test_data(user_test_data_file, parameters, no_user_test, echo=Fals
             user_test_data_file,
             sep=",",
             header=None,
-            skiprows=parameters.first_line_data - 1,
-        )
+            skiprows=parameters.first_line_data - 1)
 
         "Update progress bar"
         progress["value"] = 50
@@ -2825,7 +2438,6 @@ def load_user_test_data(user_test_data_file, parameters, no_user_test, echo=Fals
 ###                         DESTEST KPIs selection                          ###
 ###############################################################################
 
-
 def DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo=False):
     """
     Generate a GUI to prompt user for selecting KPIs and KPI weights for the 
@@ -2841,17 +2453,13 @@ def DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo=False):
 
     def on_closing():
         """if closing the window, raise exception to be caught by error handler 
-        to destroy the gui and raise the error to top leve"""
-
-        if mbox.askokcancel(
-            "ABORT", "Do you want to abort the DESTEST comparison procedure?"
-        ):
+        to destroy the gui and raise the error to top level"""
+        if mbox.askokcancel("ABORT", "Do you want to abort the DESTEST comparison procedure?"):
             raise Abort_exception("The user aborted the procedure.")
 
     gui.protocol("WM_DELETE_WINDOW", on_closing)
 
     "Change exception handler of tkinter"
-
     def show_error(self, *args):
         nonlocal gui
         gui.destroy()
@@ -2864,9 +2472,7 @@ def DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo=False):
     gui.title("Select Key Performance Indicators (KPIs)")
     screen_width = gui.winfo_screenwidth()
     screen_height = gui.winfo_screenheight()
-    gui.geometry(
-        "450x470+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125)
-    )  # Adjust window size as a function of screen resolution
+    gui.geometry("450x470+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window size as a function of screen resolution
     gui.lift()  # Place on top of all Python windows
     gui.attributes("-topmost", True)  # Place on top of all windows (all the time)
     gui.attributes("-topmost", False)  # Disable on top all the time
@@ -2895,36 +2501,27 @@ def DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo=False):
             "Check validity of input number"
             if new_KPI_weight > 0:  # Check that new KPI weight is greater than 0
                 if not already_listed:  # Check that the new KPI is not already listed
-                    list_KPIs.append(
-                        selected_new_KPI.get()
-                    )  # Add the new KPI to the end of the KPI list
-                    list_KPI_weights.append(
-                        new_KPI_weight
-                    )  # Add the new KPI weight to the end of the weight list
+                    list_KPIs.append(selected_new_KPI.get())  # Add the new KPI to the end of the KPI list
+                    list_KPI_weights.append(new_KPI_weight)  # Add the new KPI weight to the end of the weight list
 
                     "Update listbox KPIs and weights"
-                    new_entry = (
-                        selected_new_KPI.get() + " weighted " + str(new_KPI_weight)
-                    )
+                    new_entry = (selected_new_KPI.get() + " weighted " + str(new_KPI_weight))
                     KPI_listbox.insert("end", new_entry)
 
                     if echo:
                         print(
                             "\nKPI added at the end of the list is:",
-                            selected_new_KPI.get(),
-                        )
+                            selected_new_KPI.get())
                         print(
                             "KPI weight added at the end of the list is:",
-                            new_KPI_weight,
-                        )
+                            new_KPI_weight)
                         print("\nCurrent list KPIs:", list_KPIs)
                         print("Current list KPI weights:", list_KPI_weights)
 
                 else:  # The new KPI is already listed
                     mbox.showerror(
                         "Error",
-                        "This KPI is already listed in the list of selected KPIs for comparison !\nChoose another one.",
-                    )
+                        "This KPI is already listed in the list of selected KPIs for comparison !\nChoose another one.")
             else:  # The new KPI weight is not greater than 0
                 mbox.showerror("Error", "The KPI weight must be larger than 0 !")
 
@@ -2962,9 +2559,7 @@ def DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo=False):
         try:
             selected_KPI = KPI_listbox.get("anchor")
             index_selection = KPI_listbox.curselection()  # Returns a tuple
-            index_selection = index_selection[
-                0
-            ]  # Get the first element of the tuple as int
+            index_selection = index_selection[0]  # Get the first element of the tuple as int
         except:
             if echo:
                 print("Something wrong happened.")
@@ -3027,8 +2622,7 @@ def DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo=False):
         if len(list_KPIs) < 1:
             mbox.showerror(
                 "Error",
-                "The list of KPIs is empty.\nThere must be at least 1 KPI in the list to proceed.",
-            )
+                "The list of KPIs is empty.\nThere must be at least 1 KPI in the list to proceed.")
         else:
             gui.destroy()  # Close the GUI window, the output will be returned
 
@@ -3043,12 +2637,9 @@ def DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo=False):
         gui,
         text="New KPI / Comparison Metric to Add: Choose from Dropdown Menu Below",
         width=430,
-        height=70,
-    )
+        height=70)
     frame1.pack(padx=10, pady=5)
-    frame1.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame1.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Dropdown selection menu for KPIs"
     options_KPIs = list_implemented_KPIs
@@ -3064,49 +2655,39 @@ def DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo=False):
         gui,
         text="Grading Weight for the Above KPI / Comparison Metric to Be Added",
         width=430,
-        height=60,
-    )
+        height=60)
     frame2.pack(padx=10, pady=5)
-    frame2.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame2.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Input user box for weight KPI"
     default_value_KPI_weight_input = StringVar(frame2, value="1")
-    user_input_KPI_weight = tk.Entry(
-        frame2, textvariable=default_value_KPI_weight_input, width=10
-    )  # Init with default value
+    user_input_KPI_weight = tk.Entry(frame2, textvariable=default_value_KPI_weight_input, width=10)  # Init with default value
     user_input_KPI_weight.pack(pady=(10, 5))
 
     "Frame 3"
     frame3 = tk.LabelFrame(gui, width=430, height=115)
     frame3.pack(padx=10, pady=5)
-    frame3.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame3.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Add new KPI button"
     add_new_KPI_button = tk.Button(
         frame3,
         text="Add the Above KPI / Comparison Metric to the List",
-        command=lambda: add_new_KPI(echo),
-    )  # Create button executing function
+        command=lambda: add_new_KPI(echo))  # Create button executing function
     add_new_KPI_button.pack(padx=30, pady=5)
 
     "Remove selected KPI from the list"
     remove_KPI_button = tk.Button(
         frame3,
         text="Remove Selected KPI / Comparison Metric From the List",
-        command=lambda: remove_selected_KPI(echo),
-    )  # Create button executing function
+        command=lambda: remove_selected_KPI(echo))  # Create button executing function
     remove_KPI_button.pack(padx=30, pady=5)
 
     "Clear the list of KPIs"
     clear_list_KPI_button = tk.Button(
         frame3,
         text="Clear the Entire KPI / Comparison Metric List",
-        command=lambda: clear_list_KPIs(echo),
-    )  # Create button executing function
+        command=lambda: clear_list_KPIs(echo))  # Create button executing function
     clear_list_KPI_button.pack(padx=30, pady=5)
 
     "Frame 4"
@@ -3114,12 +2695,9 @@ def DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo=False):
         gui,
         text="Current List of KPIs / Comparison Metrics for DESTEST Comparison",
         width=430,
-        height=130,
-    )
+        height=130)
     frame4.pack(padx=10, pady=5)
-    frame4.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame4.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Create listbox to display current list of KPIs and weights"
     KPI_listbox = tk.Listbox(frame4, bg="lightgrey", width=50, height=120)
@@ -3132,23 +2710,19 @@ def DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo=False):
     "Frame 5"
     frame5 = tk.LabelFrame(gui, width=430, height=42)
     frame5.pack(padx=10, pady=5)
-    frame5.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame5.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Confirm button"
     confirm_button = tk.Button(
         frame5,
         text="Confirm Selections and Continue",
-        command=lambda: confirm_selection(list_KPIs, echo),
-    )  # Create button executing function
+        command=lambda: confirm_selection(list_KPIs, echo))  # Create button executing function
     confirm_button.pack(padx=30, pady=5)
 
     "Starting information message"
     mbox.showinfo(
         "Recommendation",
-        "You can change here the list of KPIs / Comparison Metrics and their respective grading weights that are used to perform the DESTEST comparison calculation.\nHowever, it is recommended to keep the default values that are already selected and proceed directly to the comparison calculation.",
-    )
+        "You can change here the list of KPIs / Comparison Metrics and their respective grading weights that are used to perform the DESTEST comparison calculation.\nHowever, it is recommended to keep the default values that are already selected and proceed directly to the comparison calculation.")
 
     "Generate a mainLoop to activate the gui"
     gui.mainloop()  # Run loop updating the window
@@ -3166,7 +2740,6 @@ def DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo=False):
 ###                     DESTEST comparison calculation                      ###
 ###############################################################################
 
-
 def DESTEST_comparison_calculation(
     df_user_test_data,
     df_DESTEST_data,
@@ -3177,21 +2750,19 @@ def DESTEST_comparison_calculation(
     list_KPI_weights,
     dictionnary_KPI_functions,
     dictionnary_KPI_grade_system,
-    echo=False,
-):
+    echo=False):
     """Calculates the KPIs listed as input, Average, Minimum and Maximum
     of all measured parameters of the user test data compared to a reference
     profile built from the point-by-point average of all the loaded DESTEST data.
     Calculates the global error grade based on the KPI weights listed as input.
     """
 
-    # Initialize and generate GUI ##########################################################
+    # Initialize and generate GUI #############################################
 
     "Create the window"
     gui = tk.Tk()  # Create a new window (widget, root, object)
 
     "Change exception handler of tkinter"
-
     def show_error(self, *args):
         nonlocal gui
         gui.destroy()
@@ -3204,9 +2775,7 @@ def DESTEST_comparison_calculation(
     gui.title("Calculation")
     screen_width = gui.winfo_screenwidth()
     screen_height = gui.winfo_screenheight()
-    gui.geometry(
-        "400x80+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125)
-    )  # Adjust window size as a function of screen resolution
+    gui.geometry("400x80+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window size as a function of screen resolution
     gui.lift()  # Place on top of all Python windows
     gui.attributes("-topmost", True)  # Place on top of all windows (all the time)
     gui.attributes("-topmost", False)  # Disable on top all the time
@@ -3215,20 +2784,14 @@ def DESTEST_comparison_calculation(
     "Frame 1"
     frame1 = tk.LabelFrame(gui, width=400, height=70)
     frame1.pack(padx=10, pady=10)
-    frame1.pack_propagate(
-        0
-    )  # Disable resizing of the frame when widgets are packed or resized inside
+    frame1.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
     "Display message as label on GUI"
-    my_label = tk.Label(
-        frame1, text="Performing DESTEST comparison calculation: Please wait."
-    )  # Pack the name of the file on the window
+    my_label = tk.Label(frame1, text="Performing DESTEST comparison calculation: Please wait.")  # Pack the name of the file on the window
     my_label.pack()
 
     "Init progess bar"
-    progress = Progressbar(
-        frame1, orient=HORIZONTAL, length=200, mode="determinate"
-    )  # New horizontal progress bar in determinate (normal) mode
+    progress = Progressbar(frame1, orient=HORIZONTAL, length=200, mode="determinate")  # New horizontal progress bar in determinate (normal) mode
     progress.pack(pady=5)
     progress["value"] = 0
     gui.update_idletasks()
@@ -3240,41 +2803,28 @@ def DESTEST_comparison_calculation(
         place into df """
 
         "Init output df"
-        reference_df = df_DESTEST_data.iloc[
-            :, 0:2
-        ]  # Select all lines of 1st and 2nd column of a valid df: time stamp and time in sec
+        reference_df = df_DESTEST_data.iloc[:, 0:2]  # Select all lines of 1st and 2nd column of a valid df: time stamp and time in sec
 
         try:
             nbr_parameters_result = len(parameters.list_column_names) - 1
-            list_parameters = parameters.list_column_names[
-                1 : nbr_parameters_result + 1
-            ]  # get all parameters from 2nd and forward. 1st column name is elapsed time
+            list_parameters = parameters.list_column_names[1 : nbr_parameters_result + 1]  # get all parameters from 2nd and forward. 1st column name is elapsed time
 
             for p in list_parameters:
-                df_all = df_DESTEST_data.loc[
-                    :, df_DESTEST_data.columns.str.contains(p + "*")
-                ]  # Select all columns that contains a parameter followed by anything in their column name
-                df_mean = df_all.mean(
-                    axis=1
-                )  # Average per row for all rows: It is a series
+                df_all = df_DESTEST_data.loc[:, df_DESTEST_data.columns.str.contains(p + "*")]  # Select all columns that contains a parameter followed by anything in their column name
+                df_mean = df_all.mean(axis=1)  # Average per row for all rows: It is a series
                 df_mean = df_mean.to_frame()  # Convert from Series to DataFrame
-                df_mean.columns = [
-                    p
-                ]  # Give corresponding parameter name to column df_mean
+                df_mean.columns = [p]  # Give corresponding parameter name to column df_mean
 
                 if echo:
                     print(
                         "Data set used for reference profile of parameter "
                         + str(p)
                         + " is of size: "
-                        + str(df_all.shape)
-                    )
+                        + str(df_all.shape))
                     print(df_all)
 
                 frames = [reference_df, df_mean]  # The 2 df to concat
-                reference_df = pd.concat(
-                    frames, axis=1, join="outer"
-                )  # Add to right of reference_df
+                reference_df = pd.concat(frames, axis=1, join="outer")  # Add to right of reference_df
 
         except:
             raise
@@ -3295,8 +2845,7 @@ def DESTEST_comparison_calculation(
         no_user_test,
         list_KPIs,
         list_KPI_weights,
-        echo=False,
-    ):
+        echo=False):
         """Calcualte the error grades and accuracy grades for all cases of the
         DESTEST and the user data and generate a df to be added to the result df
 
@@ -3307,61 +2856,38 @@ def DESTEST_comparison_calculation(
         The error grade is always normalized as percentages between 0-100%
         """
         if no_user_test:
-            list_cases = (
-                list_DESTEST_cases
-            )  # Selections of columns for the error grade calculation
+            list_cases = (list_DESTEST_cases)  # Selections of columns for the error grade calculation
         else:
-            list_cases = [
-                "User Test"
-            ] + list_DESTEST_cases  # Selections of columns for the error grade calculation
+            list_cases = ["User Test"] + list_DESTEST_cases  # Selections of columns for the error grade calculation
 
         list_summary_metrics = ["Error grade [%]", "Accuracy grade [%]"]
 
         "Init error grade df"
         df_result_column_names = list(df_result.columns)
-        df_error_grade = pd.DataFrame(
-            columns=df_result_column_names
-        )  # Create the column of an empty df
+        df_error_grade = pd.DataFrame(columns=df_result_column_names)  # Create the column of an empty df
         new_df = pd.DataFrame(
             {
                 df_result_column_names[0]: ["Summary"] * len(list_summary_metrics),
                 df_result_column_names[1]: list_summary_metrics,
-            }
-        )  # Make new df with repetitions of parameter and different metrics
-        df_error_grade = pd.concat(
-            [df_error_grade, new_df], sort=False, ignore_index=True
-        ).fillna(
-            0
-        )  # Concat new df into error grade df and fill missing columns with 0
+            })  # Make new df with repetitions of parameter and different metrics
+        df_error_grade = pd.concat([df_error_grade, new_df], sort=False, ignore_index=True).fillna(0)  # Concat new df into error grade df and fill missing columns with 0
 
-        sub_df_KPIs = df_result[df_result["KPI / Metric"].isin(list_KPIs)][
-            list_cases + ["KPI / Metric"]
-        ]  # Select only metrics of interest (rows) and cases except reference, keep list corresponding KPIs at the end
-        sub_df_KPIs.index = sub_df_KPIs[
-            "KPI / Metric"
-        ]  # Replace the index of the df by the corresponding KPI of each selected row
-        sub_df_KPIs.drop(
-            "KPI / Metric", axis="columns", inplace=True
-        )  # Drop the column with the KPIs
+        sub_df_KPIs = df_result[df_result["KPI / Metric"].isin(list_KPIs)][list_cases + ["KPI / Metric"]]  # Select only metrics of interest (rows) and cases except reference, keep list corresponding KPIs at the end
+        sub_df_KPIs.index = sub_df_KPIs["KPI / Metric"]  # Replace the index of the df by the corresponding KPI of each selected row
+        sub_df_KPIs.drop("KPI / Metric", axis="columns", inplace=True)  # Drop the column with the KPIs
 
-        sub_df_err_grades = (
-            sub_df_KPIs.copy()
-        )  # Make a new df from the sub_df_KPIs: use .copy and not "=" otherwise only copy the pointer to the df
+        sub_df_err_grades = (sub_df_KPIs.copy())  # Make a new df from the sub_df_KPIs: use .copy and not "=" otherwise only copy the pointer to the df
         sub_df_err_grades[:] = 0  # Fill it with zeros everywhere
 
         "Create extended list of KPI weights"
         factor = int(len(sub_df_KPIs) / len(list_KPI_weights))
-        extented_list_KPI_weights = (
-            list_KPI_weights * factor
-        )  # Repeat n times the list of weights to fit the length of rows in the df (n = number of parameters)
+        extented_list_KPI_weights = (list_KPI_weights * factor)  # Repeat n times the list of weights to fit the length of rows in the df (n = number of parameters)
 
         "Calculate error grade for each case and for each KPI"
         i = 0  # row index for KPI index in df
         for k, row in sub_df_KPIs.iterrows():  # Go through each row (KPI)
 
-            grade_system = grading_system_selector(
-                k
-            )  # The name of the row (its index in the df) is the KPI. Use it to get select the grading system
+            grade_system = grading_system_selector(k)  # The name of the row (its index in the df) is the KPI. Use it to get select the grading system
 
             if grade_system == "best_zero":
                 best = abs(row).min()  # The best is the closest to zero
@@ -3383,19 +2909,13 @@ def DESTEST_comparison_calculation(
                 KPI_weight = extented_list_KPI_weights[i]
 
                 if grade_system == "best_zero":
-                    sub_df_err_grades.iloc[i, j] = KPI_weight * (
-                        (abs(c) - best) / (worst - best)
-                    )  # iloc[line,column]
+                    sub_df_err_grades.iloc[i, j] = KPI_weight * ((abs(c) - best) / (worst - best))  # iloc[line,column]
 
                 elif grade_system == "best_highest":
-                    sub_df_err_grades.iloc[i, j] = KPI_weight * (
-                        (best - c) / (best - worst)
-                    )  # iloc[line,column]
+                    sub_df_err_grades.iloc[i, j] = KPI_weight * ((best - c) / (best - worst))  # iloc[line,column]
 
                 elif grade_system == "best_lowest":
-                    sub_df_err_grades.iloc[i, j] = KPI_weight * (
-                        (c - best) / (worst - best)
-                    )  # iloc[line,column]
+                    sub_df_err_grades.iloc[i, j] = KPI_weight * ((c - best) / (worst - best))  # iloc[line,column]
 
                 else:
                     raise Exception("wrong grading system")
@@ -3403,17 +2923,9 @@ def DESTEST_comparison_calculation(
             i = i + 1
 
         for i, c in enumerate(list_cases):  # Go through each case
-            error_grade = (sub_df_err_grades[c].sum()) / (
-                np.array(extented_list_KPI_weights).sum()
-            )  # Normalized Error grade
-            df_error_grade.loc[
-                (df_error_grade["KPI / Metric"] == list_summary_metrics[0]), c
-            ] = round(error_grade * 100, 2)
-            df_error_grade.loc[
-                (df_error_grade["KPI / Metric"] == list_summary_metrics[1]), c
-            ] = round(
-                100 - error_grade * 100, 2
-            )  # accuracy grade as reciprocal error grade
+            error_grade = (sub_df_err_grades[c].sum()) / (np.array(extented_list_KPI_weights).sum())  # Normalized Error grade
+            df_error_grade.loc[(df_error_grade["KPI / Metric"] == list_summary_metrics[0]), c] = round(error_grade * 100, 2)
+            df_error_grade.loc[(df_error_grade["KPI / Metric"] == list_summary_metrics[1]), c] = round(100 - error_grade * 100, 2)  # accuracy grade as reciprocal error grade
 
         if echo:
             print("Summary grades:")
@@ -3429,9 +2941,7 @@ def DESTEST_comparison_calculation(
         "Init output df_result"
         "Get parameters from the parameters input"
         nbr_parameters_result = len(parameters.list_column_names) - 1
-        list_parameters = parameters.list_column_names[
-            1 : nbr_parameters_result + 1
-        ]  # get all parameters from 2nd and forward. 1st column name is elapsed time
+        list_parameters = parameters.list_column_names[1 : nbr_parameters_result + 1]  # get all parameters from 2nd and forward. 1st column name is elapsed time
 
         "Generate names of columns for the df result"
         df_result_column_names = ["Parameter"] + ["KPI / Metric"] + full_list_cases
@@ -3445,13 +2955,8 @@ def DESTEST_comparison_calculation(
                 {
                     df_result_column_names[0]: [p] * len(list_metrics),
                     df_result_column_names[1]: list_metrics,
-                }
-            )  # Make new df with repetitions of parameter and different metrics
-            df_result = pd.concat(
-                [df_result, new_df], sort=False, ignore_index=True
-            ).fillna(
-                0
-            )  # Concat new df into result df and fill missing columns with 0
+                })  # Make new df with repetitions of parameter and different metrics
+            df_result = pd.concat([df_result, new_df], sort=False, ignore_index=True).fillna(0)  # Concat new df into result df and fill missing columns with 0
 
         if echo:
             print("\nInitialized df_result:\n")
@@ -3463,14 +2968,10 @@ def DESTEST_comparison_calculation(
 
     # Sub-function: KPI selector ##############################################
 
-    def KPI_selector(
-        argument, reference_vector, test_case_vector, date_and_time_stamp_vect
-    ):
+    def KPI_selector(argument, reference_vector, test_case_vector, date_and_time_stamp_vect):
         switcher = dictionnary_KPI_functions  # Create the switcher
         # Get the function from switcher dictionary
-        function = switcher.get(
-            argument, lambda: "Invalid KPI"
-        )  # The string "Invalid KPI" will be the default output
+        function = switcher.get(argument, lambda: "Invalid KPI")  # The string "Invalid KPI" will be the default output
         # Execute the function
         return function(reference_vector, test_case_vector, date_and_time_stamp_vect)
 
@@ -3481,9 +2982,7 @@ def DESTEST_comparison_calculation(
     def grading_system_selector(argument):
         switcher = dictionnary_KPI_grade_system  # Create the switcher
         # Get the function from switcher dictionary
-        result = switcher.get(
-            argument, "Invalid grade system"
-        )  # The string "Invalid grade system" will be the default output
+        result = switcher.get(argument, "Invalid grade system")  # The string "Invalid grade system" will be the default output
         # Execute the function
         return result
 
@@ -3497,11 +2996,9 @@ def DESTEST_comparison_calculation(
             "Minimum",
             "Maximum",
             "Average",
-            "Standard Deviation",
-        ]  # Add classic metrics to the list of selected KPIs
-        list_metrics = (
-            list_KPIs + basic_side_metrics
-        )  # Add classic metrics to the list of selected KPIs
+            "Standard Deviation"]  # Add classic metrics to the list of selected KPIs
+        
+        list_metrics = (list_KPIs + basic_side_metrics)  # Add classic metrics to the list of selected KPIs
         date_and_time_stamp_vect = df_DESTEST_data["Date and Time"]
 
         "Make full list of cases by adding reference and user test if any"
@@ -3511,9 +3008,7 @@ def DESTEST_comparison_calculation(
             full_list_cases = ["User Test"] + ["Reference"] + list_DESTEST_cases
 
         "Init output df_result"
-        df_result, list_parameters = init_df_result(
-            parameters, full_list_cases, list_metrics, echo
-        )
+        df_result, list_parameters = init_df_result(parameters, full_list_cases, list_metrics, echo)
 
         "Update progress bar"
         progress["value"] = 10
@@ -3555,9 +3050,7 @@ def DESTEST_comparison_calculation(
                     print("\nTest case vector for " + str(p) + " ; " + str(c))
                     print(test_case_vector)
 
-                for k, m in enumerate(
-                    list_metrics
-                ):  # Loop through the different metrics
+                for k, m in enumerate(list_metrics):  # Loop through the different metrics
 
                     try:
                         "Switch cases to the corresponding metric to calculate"
@@ -3565,18 +3058,13 @@ def DESTEST_comparison_calculation(
                             m,
                             reference_vector,
                             test_case_vector,
-                            date_and_time_stamp_vect,
-                        )
+                            date_and_time_stamp_vect)
                     except:
                         result_KPI = float("nan")
                         print("Something went wrong")
                     finally:
                         "Find the df entry from p,c,m"
-                        df_result.loc[
-                            (df_result["Parameter"] == p)
-                            & (df_result["KPI / Metric"] == m),
-                            c,
-                        ] = result_KPI
+                        df_result.loc[(df_result["Parameter"] == p) & (df_result["KPI / Metric"] == m),c] = result_KPI
 
                         if echo:
                             message = (
@@ -3587,19 +3075,11 @@ def DESTEST_comparison_calculation(
                                 + " ; "
                                 + str(c)
                                 + " is : "
-                                + str(result_KPI)
-                            )
+                                + str(result_KPI))
                             print(message)
 
                     "Update progress bar"
-                    progress["value"] = 20 + 80 * (
-                        i * len(full_list_cases) * len(list_metrics)
-                        + j * len(list_metrics)
-                        + k
-                        + 1
-                    ) / (
-                        len(list_parameters) * len(full_list_cases) * len(list_metrics)
-                    )
+                    progress["value"] = 20 + 80 * (i * len(full_list_cases) * len(list_metrics) + j * len(list_metrics) + k + 1) / (len(list_parameters) * len(full_list_cases) * len(list_metrics))
                     gui.update_idletasks()
 
         "Calculate summary metrics"
@@ -3609,13 +3089,10 @@ def DESTEST_comparison_calculation(
             no_user_test,
             list_KPIs,
             list_KPI_weights,
-            echo,
-        )
+            echo)
 
         "Add summary metrics"
-        df_result = pd.concat(
-            [df_result, df_error_grade], sort=False, ignore_index=True
-        )  # Concat error grade at the end of df result
+        df_result = pd.concat([df_result, df_error_grade], sort=False, ignore_index=True)  # Concat error grade at the end of df result
 
     except:  # Error during intialization
         gui.destroy()
@@ -3630,7 +3107,6 @@ def DESTEST_comparison_calculation(
 ###                               DESTEST plots                             ###
 ###############################################################################
 
-
 def DESTEST_plots(
     df_result,
     parameters,
@@ -3639,528 +3115,541 @@ def DESTEST_plots(
     df_user_test_data,
     reference_df,
     df_DESTEST_data,
-    echo=False,
-):
+    echo=False):
     """Generates different plots fromt the DESTEST comparison results and loaded
     data from the files.
     """
 
-    # Init ####################################################################
-    "Get list parameters to plot from the parameters input"
-    nbr_parameters_result = len(parameters.list_column_names) - 1
-    list_parameters = parameters.list_column_names[
-        1 : nbr_parameters_result + 1
-    ]  # get all parameters from 2nd and forward. 1st column name is elapsed time
+    # Initialize and generate GUI #############################################
 
-    ###########################################################################
+    "Create the window"
+    gui = tk.Tk()  # Create a new window (widget, root, object)
 
-    # All results table #######################################################
+    "Change exception handler of tkinter"
+    def show_error(self, *args):
+        nonlocal gui
+        gui.destroy()
+        raise  # Simply raise the exception
+        return
 
-    "PLot the result table into an HTML doc (temp)"
-    fig = go.Figure(
-        data=[
-            go.Table(
-                header=dict(
-                    values=list(df_result.columns),
-                    fill_color="paleturquoise",
-                    align="left",
-                ),
-                cells=dict(
-                    values=[
-                        df_result.iloc[:, i] for i, c in enumerate(df_result.columns)
-                    ],
-                    fill_color="lavender",
-                    align="left",
-                ),
+    tk.Tk.report_callback_exception = show_error  # changing the Tk class itself.
+
+    "Change the window properties"
+    gui.title("Generate Output Report")
+    screen_width = gui.winfo_screenwidth()
+    screen_height = gui.winfo_screenheight()
+    gui.geometry("400x80+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window size as a function of screen resolution
+    gui.lift()  # Place on top of all Python windows
+    gui.attributes("-topmost", True)  # Place on top of all windows (all the time)
+    gui.attributes("-topmost", False)  # Disable on top all the time
+    gui.resizable(width=False, height=False)  # Disable resizing of the window
+
+    "Frame 1"
+    frame1 = tk.LabelFrame(gui, width=400, height=70)
+    frame1.pack(padx=10, pady=10)
+    frame1.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
+
+    "Display message as label on GUI"
+    my_label = tk.Label(frame1, text="Generating output report with figures and tables: Please wait.")  # Pack the name of the file on the window
+    my_label.pack()
+
+    "Init progess bar"
+    progress = Progressbar(frame1, orient=HORIZONTAL, length=200, mode="determinate")  # New horizontal progress bar in determinate (normal) mode
+    progress.pack(pady=5)
+    progress["value"] = 0
+    gui.update_idletasks()
+    
+    try:
+        # Plot Parameters #####################################################
+        
+        "Get list parameters to plot from the parameters input"
+        nbr_parameters_result = len(parameters.list_column_names) - 1
+        list_parameters = parameters.list_column_names[1 : nbr_parameters_result + 1]  # get all parameters from 2nd and forward. 1st column name is elapsed time
+        
+        #######################################################################
+
+        # All results table ###################################################
+
+        "PLot the result table into an HTML doc (temp)"
+        fig = go.Figure(
+            data=[
+                go.Table(
+                    header=dict(
+                        values=list(df_result.columns),
+                        fill_color="paleturquoise",
+                        align="left",
+                        ),
+                    cells=dict(
+                        values=[
+                            df_result.iloc[:, i] for i, c in enumerate(df_result.columns)
+                            ],
+                        fill_color="lavender",
+                        align="left",
+                        ),
+                    )
+                ]
             )
-        ]
-    )
 
-    plot(fig, auto_open=True)  # Auto open as html in browser
+        plot(fig, auto_open=True)  # Auto open as html in browser
 
-    ###########################################################################
+        #######################################################################
 
-    # Min Max Avrg table ######################################################
+        # Min Max Avrg table ##################################################
 
-    ###########################################################################
+        #######################################################################
 
-    # Comparison metrics table ################################################
+        # Comparison metrics table ############################################
 
-    # Barplots ################################################################
+        # Barplots ############################################################
 
-    "Bar plot parameters"
-    barWidth = 0.9
-    capsize_para = 10
-
-    if no_user_test:
-        max_index = max_DESTEST_cases_on_graph + 2 + 1
-    else:
-        max_index = max_DESTEST_cases_on_graph + 2 + 2
-
-    # Barplots Minimums #######################################################
-
-    "Plot mimima of all parameters for all cases up to limit (one graph per parameter)"
-
-    target = "Minimum"
-
-    for p in list_parameters:
-        "Get data from entire df_result up to limit max graphs"
-        df = df_result[
-            (df_result["Parameter"] == p) & (df_result["KPI / Metric"] == target)
-        ]  # Get only data
-        list_sub_df = df.iloc[0, :]  # Transform into series
-        list_sub_df = list_sub_df[
-            2 : min(len(list_sub_df), max_index)
-        ]  # Remove 2 first entries (Parameter and KPI / Metric)
-
-        "Create bars"
+        "Bar plot parameters"
+        barWidth = 0.9
+        capsize_para = 10
 
         if no_user_test:
-            bars2 = [list_sub_df[0]]  # Reference
-            bars3 = list_sub_df[1 : len(list_sub_df)].tolist()  # All the DESTEST cases
-
+            max_index = max_DESTEST_cases_on_graph + 2 + 1
         else:
-            bars1 = [list_sub_df[0]]  # User Test
-            bars2 = [list_sub_df[1]]  # Reference
-            bars3 = list_sub_df[2 : len(list_sub_df)].tolist()  # All the DESTEST case
+            max_index = max_DESTEST_cases_on_graph + 2 + 2
 
-        "The X position of bars"
-        if no_user_test:
-            r2 = [1]  # Reference
-            r3 = list(range(2, len(list_sub_df) + 1))  # All the DESTEST cases
-        else:
-            r1 = [1]  # User Test
-            r2 = [2]  # Reference
-            r3 = list(range(3, len(list_sub_df) + 1))  # All the DESTEST cases
+        # Barplots Minimums ###################################################
 
-        "Create barplot"
-        if not no_user_test:
-            plt.bar(r1, bars1, width=barWidth, color="red", label="User Test")
+        "Plot mimima of all parameters for all cases up to limit (one graph per parameter)"
 
-        plt.bar(r2, bars2, width=barWidth, color="grey", label="Reference")
-        plt.bar(r3, bars3, width=barWidth, color="royalblue", label="DESTEST cases")
+        target = "Minimum"
 
-        "Adjust Y-axis to round up/down of max/min values in data"
-        if no_user_test:
-            y = bars2 + bars3
-        else:
-            y = bars1 + bars2 + bars3
+        for i, p in enumerate(list_parameters):
+            "Get data from entire df_result up to limit max graphs"
+            df = df_result[(df_result["Parameter"] == p) & (df_result["KPI / Metric"] == target)]  # Get only data
+            list_sub_df = df.iloc[0, :]  # Transform into series
+            list_sub_df = list_sub_df[2 : min(len(list_sub_df), max_index)]  # Remove 2 first entries (Parameter and KPI / Metric)
 
-        low = min(y)
-        high = max(y)
-        plt.ylim(
-            [math.floor(low - 0.5 * (high - low)), math.ceil(high + 0.5 * (high - low))]
-        )
+            "Create bars"
+            if no_user_test:
+                bars2 = [list_sub_df[0]]  # Reference
+                bars3 = list_sub_df[1 : len(list_sub_df)].tolist()  # All the DESTEST cases
 
-        "Labels X-axis"
-        if no_user_test:
-            labels = ["Ref", "DESTEST cases"]
-            x_labels = [1, np.array(r3).mean()]
-        else:
-            labels = ["User Test", "Ref", "DESTEST cases"]
-            x_labels = [1, 2, np.array(r3).mean()]
+            else:
+                bars1 = [list_sub_df[0]]  # User Test
+                bars2 = [list_sub_df[1]]  # Reference
+                bars3 = list_sub_df[2 : len(list_sub_df)].tolist()  # All the DESTEST case
 
-        plt.xticks(x_labels, labels)
+            "The X position of bars"
+            if no_user_test:
+                r2 = [1]  # Reference
+                r3 = list(range(2, len(list_sub_df) + 1))  # All the DESTEST cases
+            else:
+                r1 = [1]  # User Test
+                r2 = [2]  # Reference
+                r3 = list(range(3, len(list_sub_df) + 1))  # All the DESTEST cases
 
-        "Title graph"
-        plt.title(str(target) + " " + p)
-        plt.show()
+            "Create barplot"
+            if not no_user_test:
+                plt.bar(r1, bars1, width=barWidth, color="red", label="User Test")
 
-    ###########################################################################
+            plt.bar(r2, bars2, width=barWidth, color="grey", label="Reference")
+            plt.bar(r3, bars3, width=barWidth, color="royalblue", label="DESTEST cases")
 
-    # Barplots Maximums #######################################################
+            "Adjust Y-axis to round up/down of max/min values in data"
+            if no_user_test:
+                y = bars2 + bars3
+            else:
+                y = bars1 + bars2 + bars3
 
-    "Plot maxima of all parameters for all cases up to limit (one graph per parameter)"
+            low = min(y)
+            high = max(y)
+            plt.ylim([math.floor(low - 0.5 * (high - low)), math.ceil(high + 0.5 * (high - low))])
 
-    target = "Maximum"
+            "Labels X-axis"
+            if no_user_test:
+                labels = ["Ref", "DESTEST cases"]
+                x_labels = [1, np.array(r3).mean()]
+            else:
+                labels = ["User Test", "Ref", "DESTEST cases"]
+                x_labels = [1, 2, np.array(r3).mean()]
 
-    for p in list_parameters:
-        "Get data from entire df_result up to limit max graphs"
-        df = df_result[
-            (df_result["Parameter"] == p) & (df_result["KPI / Metric"] == target)
-        ]  # Get only data
-        list_sub_df = df.iloc[0, :]  # Transform into series
-        list_sub_df = list_sub_df[
-            2 : min(len(list_sub_df), max_index)
-        ]  # Remove 2 first entries (Parameter and KPI / Metric)
+            plt.xticks(x_labels, labels)
 
-        "Create bars"
+            "Title graph"
+            plt.title(str(target) + " " + p)
+            plt.show()
 
-        if no_user_test:
-            bars2 = [list_sub_df[0]]  # Reference
-            bars3 = list_sub_df[1 : len(list_sub_df)].tolist()  # All the DESTEST cases
+            "Update progress bar"
+            progress["value"] = 40 + 10 * i / len(list_parameters)
+            gui.update_idletasks()
 
-        else:
-            bars1 = [list_sub_df[0]]  # User Test
-            bars2 = [list_sub_df[1]]  # Reference
-            bars3 = list_sub_df[2 : len(list_sub_df)].tolist()  # All the DESTEST cases
+        #######################################################################
 
-        "The X position of bars"
-        if no_user_test:
-            r2 = [1]  # Reference
-            r3 = list(range(2, len(list_sub_df) + 1))  # All the DESTEST cases
-        else:
-            r1 = [1]  # User Test
-            r2 = [2]  # Reference
-            r3 = list(range(3, len(list_sub_df) + 1))  # All the DESTEST cases
+        # Barplots Maximums ###################################################
 
-        "Create barplot"
-        if not no_user_test:
-            plt.bar(r1, bars1, width=barWidth, color="red", label="User Test")
+        "Plot maxima of all parameters for all cases up to limit (one graph per parameter)"
 
-        plt.bar(r2, bars2, width=barWidth, color="grey", label="Reference")
-        plt.bar(r3, bars3, width=barWidth, color="royalblue", label="DESTEST cases")
+        target = "Maximum"
 
-        "Adjust Y-axis to round up/down of max/min values in data"
-        if no_user_test:
-            y = bars2 + bars3
-        else:
-            y = bars1 + bars2 + bars3
+        for i, p in enumerate(list_parameters):
+            "Get data from entire df_result up to limit max graphs"
+            df = df_result[(df_result["Parameter"] == p) & (df_result["KPI / Metric"] == target)]  # Get only data
+            list_sub_df = df.iloc[0, :]  # Transform into series
+            list_sub_df = list_sub_df[2 : min(len(list_sub_df), max_index)]  # Remove 2 first entries (Parameter and KPI / Metric)
 
-        low = min(y)
-        high = max(y)
-        plt.ylim(
-            [math.floor(low - 0.5 * (high - low)), math.ceil(high + 0.5 * (high - low))]
-        )
+            "Create bars"
+            if no_user_test:
+                bars2 = [list_sub_df[0]]  # Reference
+                bars3 = list_sub_df[1 : len(list_sub_df)].tolist()  # All the DESTEST cases
 
-        "Labels X-axis"
-        if no_user_test:
-            labels = ["Ref", "DESTEST cases"]
-            x_labels = [1, np.array(r3).mean()]
-        else:
-            labels = ["User Test", "Ref", "DESTEST cases"]
-            x_labels = [1, 2, np.array(r3).mean()]
+            else:
+                bars1 = [list_sub_df[0]]  # User Test
+                bars2 = [list_sub_df[1]]  # Reference
+                bars3 = list_sub_df[2 : len(list_sub_df)].tolist()  # All the DESTEST cases
 
-        plt.xticks(x_labels, labels)
+            "The X position of bars"
+            if no_user_test:
+                r2 = [1]  # Reference
+                r3 = list(range(2, len(list_sub_df) + 1))  # All the DESTEST cases
+            else:
+                r1 = [1]  # User Test
+                r2 = [2]  # Reference
+                r3 = list(range(3, len(list_sub_df) + 1))  # All the DESTEST cases
 
-        "Title graph"
-        plt.title(str(target) + " " + p)
-        plt.show()
+            "Create barplot"
+            if not no_user_test:
+                plt.bar(r1, bars1, width=barWidth, color="red", label="User Test")
 
-    ###########################################################################
+            plt.bar(r2, bars2, width=barWidth, color="grey", label="Reference")
+            plt.bar(r3, bars3, width=barWidth, color="royalblue", label="DESTEST cases")
 
-    # Barplots Averages + std dev #############################################
+            "Adjust Y-axis to round up/down of max/min values in data"
+            if no_user_test:
+                y = bars2 + bars3
+            else:
+                y = bars1 + bars2 + bars3
 
-    "Plot averages and standard deviations of all parameters for all cases up to limit (one graph per parameter)"
+            low = min(y)
+            high = max(y)
+            plt.ylim([math.floor(low - 0.5 * (high - low)), math.ceil(high + 0.5 * (high - low))])
 
-    target1 = "Average"
-    target2 = "Standard Deviation"
+            "Labels X-axis"
+            if no_user_test:
+                labels = ["Ref", "DESTEST cases"]
+                x_labels = [1, np.array(r3).mean()]
+            else:
+                labels = ["User Test", "Ref", "DESTEST cases"]
+                x_labels = [1, 2, np.array(r3).mean()]
 
-    for p in list_parameters:
-        "Get data from entire df_result up to limit max graphs for target1"
-        df = df_result[
-            (df_result["Parameter"] == p) & (df_result["KPI / Metric"] == target1)
-        ]  # Get only data
-        list_sub_df1 = df.iloc[0, :]  # Transform into series
-        list_sub_df1 = list_sub_df1[
-            2 : min(len(list_sub_df1), max_index)
-        ]  # Remove 2 first entries (Parameter and KPI / Metric)
+            plt.xticks(x_labels, labels)
 
-        "Get data from entire df_result up to limit max graphs for target2"
-        df = df_result[
-            (df_result["Parameter"] == p) & (df_result["KPI / Metric"] == target2)
-        ]  # Get only data
-        list_sub_df2 = df.iloc[0, :]  # Transform into series
-        list_sub_df2 = list_sub_df2[
-            2 : min(len(list_sub_df2), max_index)
-        ]  # Remove 2 first entries (Parameter and KPI / Metric)
+            "Title graph"
+            plt.title(str(target) + " " + p)
+            plt.show()
+        
+            "Update progress bar"
+            progress["value"] = 50 + 10 * i / len(list_parameters)
+            gui.update_idletasks()
 
-        "Create bars"
+        #######################################################################
 
-        if no_user_test:
-            bars2_t1 = [list_sub_df1[0]]  # Reference
-            bars3_t1 = list_sub_df1[1 : len(list_sub_df1)].tolist()  # All the DESTEST
+        # Barplots Averages + std dev #########################################
 
-            bars2_t2 = [list_sub_df2[0]]  # Reference
-            bars3_t2 = list_sub_df2[1 : len(list_sub_df2)].tolist()  # All the DESTEST
+        "Plot averages and standard deviations of all parameters for all cases up to limit (one graph per parameter)"
 
-        else:
-            bars1_t1 = [list_sub_df1[0]]  # User Test
-            bars2_t1 = [list_sub_df1[1]]  # Reference
-            bars3_t1 = list_sub_df1[2 : len(list_sub_df1)].tolist()  # All the DESTEST
+        target1 = "Average"
+        target2 = "Standard Deviation"
 
-            bars1_t2 = [list_sub_df2[0]]  # User Test
-            bars2_t2 = [list_sub_df2[1]]  # Reference
-            bars3_t2 = list_sub_df2[2 : len(list_sub_df2)].tolist()  # All the DESTEST
+        for i, p in enumerate(list_parameters):
+            "Get data from entire df_result up to limit max graphs for target1"
+            df = df_result[(df_result["Parameter"] == p) & (df_result["KPI / Metric"] == target1)]  # Get only data
+            list_sub_df1 = df.iloc[0, :]  # Transform into series
+            list_sub_df1 = list_sub_df1[2 : min(len(list_sub_df1), max_index)]  # Remove 2 first entries (Parameter and KPI / Metric)
 
-        "The X position of bars"
-        if no_user_test:
-            r2 = [1]  # Reference
-            r3 = list(range(2, len(list_sub_df1) + 1))  # All the DESTEST cases
-        else:
-            r1 = [1]  # User Test
-            r2 = [2]  # Reference
-            r3 = list(range(3, len(list_sub_df1) + 1))  # All the DESTEST cases
+            "Get data from entire df_result up to limit max graphs for target2"
+            df = df_result[(df_result["Parameter"] == p) & (df_result["KPI / Metric"] == target2)]  # Get only data
+            list_sub_df2 = df.iloc[0, :]  # Transform into series
+            list_sub_df2 = list_sub_df2[2 : min(len(list_sub_df2), max_index)]  # Remove 2 first entries (Parameter and KPI / Metric)
 
-        "Create barplot"
-        if not no_user_test:
+            "Create bars"
+            if no_user_test:
+                bars2_t1 = [list_sub_df1[0]]  # Reference
+                bars3_t1 = list_sub_df1[1 : len(list_sub_df1)].tolist()  # All the DESTEST
+
+                bars2_t2 = [list_sub_df2[0]]  # Reference
+                bars3_t2 = list_sub_df2[1 : len(list_sub_df2)].tolist()  # All the DESTEST
+
+            else:
+                bars1_t1 = [list_sub_df1[0]]  # User Test
+                bars2_t1 = [list_sub_df1[1]]  # Reference
+                bars3_t1 = list_sub_df1[2 : len(list_sub_df1)].tolist()  # All the DESTEST
+
+                bars1_t2 = [list_sub_df2[0]]  # User Test
+                bars2_t2 = [list_sub_df2[1]]  # Reference
+                bars3_t2 = list_sub_df2[2 : len(list_sub_df2)].tolist()  # All the DESTEST
+
+            "The X position of bars"
+            if no_user_test:
+                r2 = [1]  # Reference
+                r3 = list(range(2, len(list_sub_df1) + 1))  # All the DESTEST cases
+            else:
+                r1 = [1]  # User Test
+                r2 = [2]  # Reference
+                r3 = list(range(3, len(list_sub_df1) + 1))  # All the DESTEST cases
+
+            "Create barplot"
+            if not no_user_test:
+                plt.bar(
+                    r1,
+                    bars1_t1,
+                    yerr=bars1_t2,
+                    align="center",
+                    capsize=capsize_para,
+                    ecolor="black",
+                    width=barWidth,
+                    color="red",
+                    label="User Test")
+
             plt.bar(
-                r1,
-                bars1_t1,
-                yerr=bars1_t2,
+                r2,
+                bars2_t1,
+                yerr=bars2_t2,
                 align="center",
                 capsize=capsize_para,
                 ecolor="black",
                 width=barWidth,
-                color="red",
-                label="User Test",
-            )
+                color="grey",
+                label="Reference")
+        
+            plt.bar(
+                r3,
+                bars3_t1,
+                yerr=bars3_t2,
+                align="center",
+                capsize=capsize_para,
+                ecolor="black",
+                width=barWidth,
+                color="royalblue",
+                label="DESTEST cases")
 
-        plt.bar(
-            r2,
-            bars2_t1,
-            yerr=bars2_t2,
-            align="center",
-            capsize=capsize_para,
-            ecolor="black",
-            width=barWidth,
-            color="grey",
-            label="Reference",
-        )
-        plt.bar(
-            r3,
-            bars3_t1,
-            yerr=bars3_t2,
-            align="center",
-            capsize=capsize_para,
-            ecolor="black",
-            width=barWidth,
-            color="royalblue",
-            label="DESTEST cases",
-        )
+            "Adjust Y-axis to round up/down of max/min values in data"
+            if no_user_test:
+                y = (
+                    bars2_t1
+                    + bars3_t1
+                    + (np.array(bars2_t1) + np.array(bars2_t2)).tolist()
+                    + (np.array(bars2_t1) - np.array(bars2_t2)).tolist()
+                    + (np.array(bars3_t1) + np.array(bars3_t2)).tolist()
+                    + (np.array(bars3_t1) - np.array(bars3_t2)).tolist())
+            else:
+                y = (
+                    bars1_t1
+                    + bars2_t1
+                    + bars3_t1
+                    + (np.array(bars1_t1) + np.array(bars1_t2)).tolist()
+                    + (np.array(bars1_t1) - np.array(bars1_t2)).tolist()
+                    + (np.array(bars2_t1) + np.array(bars2_t2)).tolist()
+                    + (np.array(bars2_t1) - np.array(bars2_t2)).tolist()
+                    + (np.array(bars3_t1) + np.array(bars3_t2)).tolist()
+                    + (np.array(bars3_t1) - np.array(bars3_t2)).tolist())
 
-        "Adjust Y-axis to round up/down of max/min values in data"
-        if no_user_test:
-            y = (
-                bars2_t1
-                + bars3_t1
-                + (np.array(bars2_t1) + np.array(bars2_t2)).tolist()
-                + (np.array(bars2_t1) - np.array(bars2_t2)).tolist()
-                + (np.array(bars3_t1) + np.array(bars3_t2)).tolist()
-                + (np.array(bars3_t1) - np.array(bars3_t2)).tolist()
-            )
-        else:
-            y = (
-                bars1_t1
-                + bars2_t1
-                + bars3_t1
-                + (np.array(bars1_t1) + np.array(bars1_t2)).tolist()
-                + (np.array(bars1_t1) - np.array(bars1_t2)).tolist()
-                + (np.array(bars2_t1) + np.array(bars2_t2)).tolist()
-                + (np.array(bars2_t1) - np.array(bars2_t2)).tolist()
-                + (np.array(bars3_t1) + np.array(bars3_t2)).tolist()
-                + (np.array(bars3_t1) - np.array(bars3_t2)).tolist()
-            )
+            low = min(y)
+            high = max(y)
+            plt.ylim([math.floor(low - 0.5 * (high - low)), math.ceil(high + 0.5 * (high - low))])
 
-        low = min(y)
-        high = max(y)
-        plt.ylim(
-            [math.floor(low - 0.5 * (high - low)), math.ceil(high + 0.5 * (high - low))]
-        )
+            "Labels X-axis"
+            if no_user_test:
+                labels = ["Ref", "DESTEST cases"]
+                x_labels = [1, np.array(r3).mean()]
+            else:
+                labels = ["User Test", "Ref", "DESTEST cases"]
+                x_labels = [1, 2, np.array(r3).mean()]
 
-        "Labels X-axis"
-        if no_user_test:
-            labels = ["Ref", "DESTEST cases"]
-            x_labels = [1, np.array(r3).mean()]
-        else:
-            labels = ["User Test", "Ref", "DESTEST cases"]
-            x_labels = [1, 2, np.array(r3).mean()]
+            plt.xticks(x_labels, labels)
 
-        plt.xticks(x_labels, labels)
+            "Title graph"
+            plt.title(str(target1) + " & " + str(target2) + " " + p)
+            plt.show()
+        
+            "Update progress bar"
+            progress["value"] = 60 + 10 * i / len(list_parameters)
+            gui.update_idletasks()
 
-        "Title graph"
-        plt.title(str(target1) + " & " + str(target2) + " " + p)
-        plt.show()
+        # Profile graphs ######################################################
 
-    # Profile graphs ##########################################################
+        "loop through the list of typical days"
+        list_typical_days = parameters.list_typical_days
+        for i, d in enumerate(list_typical_days):
+            for p in list_parameters:
+                "Get data from df_DESTEST_data, df_user_test_data and reference_df to limit max graphs"
 
-    "loop through the list of typical days"
-    list_typical_days = parameters.list_typical_days
-    for d in list_typical_days:
-        for p in list_parameters:
+                "Filter df columns that contains the current parameter of interest"
+                list_boolean_targets = list(p in name for name in df_DESTEST_data.columns)  # Boolean list based on condition "p" in "name" with loop on "name"
+                list_name_targets = list(df_DESTEST_data.columns[list_boolean_targets])  # Get all corresponding column names with "p" in it
+                df_destest_cases = df_DESTEST_data[list_name_targets]  # Filter df columns that contains the current parameter of interest
+
+                "limit number of DESTEST cases"
+                df_destest_cases = df_destest_cases.iloc[:, 0 : min(len(df_destest_cases.columns), max_DESTEST_cases_on_graph)]
+
+                "remove prefix from the DESDEST df column names"
+                prefix = p + " - "
+                list_destest_cases = list(df_destest_cases.columns.str.lstrip(prefix))  # Get again list DESTEST from the df just to be sure it's in the same order
+                df_destest_cases.columns = list_destest_cases
+
+                "get data from reference (including time vectors)"
+                ref_df_time = reference_df.iloc[:, 0:2]
+                ref_df_data = pd.DataFrame(reference_df[p])
+                ref_df_data.columns = ["Reference"]
+
+                "Set min and max of the time series"
+                xmin = np.datetime64(d + " 00:00:00")
+                xmax = xmin + np.timedelta64(1, "D")  # Add one full day
+
+                "Find indexes of min max in timestamp series"
+                x = ref_df_time["Date and Time"]  # Time vector
+                xmin_index = list(x).index(xmin)
+                xmax_index = list(x).index(xmax)
+
+                x = x[xmin_index : xmax_index + 1]
+
+                if not no_user_test:
+                    y = df_user_test_data[p][xmin_index : xmax_index + 1]
+                    plt.plot(x, y, label="User Test", color="red", linewidth=2)
+
+                "Plot ref line"
+                y = ref_df_data[xmin_index : xmax_index + 1]
+                plt.plot(x, y, label="Reference", color="black", linewidth=2)
+
+                "Plot other lines"
+                for c in list_destest_cases:
+                    y = df_destest_cases[c][xmin_index : xmax_index + 1]
+                    plt.plot(x, y, label=c, linewidth=0.5)
+
+                "Format plot"
+                plt.xlabel("Date and Time")
+                plt.ylabel(p)
+
+                ax = plt.gca()  # get the current axes
+
+                ax.set_xlim(xmin, xmax)
+
+                ax.xaxis.set_minor_locator(dates.HourLocator(interval=4))  # every 4 hours
+                ax.xaxis.set_minor_formatter(dates.DateFormatter("%H:%M"))  # hours and minutes
+                ax.xaxis.set_major_locator(dates.DayLocator(interval=1))  # every day
+                ax.xaxis.set_major_formatter(dates.DateFormatter("%H:%M\n%Y-%m-%d"))  # Show date only at each midnight 00:00
+
+                plt.title(p + str(" on the ") + str(d))
+                plt.legend()
+
+                plt.show()  # Display a figure
+            
+            "Update progress bar"
+            progress["value"] = 70 + 10 * i / len(list_parameters)
+            gui.update_idletasks()
+
+        # Time distribution graphs ############################################
+
+        for i, p in enumerate(list_parameters):
             "Get data from df_DESTEST_data, df_user_test_data and reference_df to limit max graphs"
 
             "Filter df columns that contains the current parameter of interest"
-            list_boolean_targets = list(
-                p in name for name in df_DESTEST_data.columns
-            )  # Boolean list based on condition "p" in "name" with loop on "name"
-            list_name_targets = list(
-                df_DESTEST_data.columns[list_boolean_targets]
-            )  # Get all corresponding column names with "p" in it
-            df_destest_cases = df_DESTEST_data[
-                list_name_targets
-            ]  # Filter df columns that contains the current parameter of interest
+            list_boolean_targets = list(p in name for name in df_DESTEST_data.columns)  # Boolean list based on condition "p" in "name" with loop on "name"
+            list_name_targets = list(df_DESTEST_data.columns[list_boolean_targets])  # Get all corresponding column names with "p" in it
+            df_destest_cases = df_DESTEST_data[list_name_targets]  # Filter df columns that contains the current parameter of interest
 
             "limit number of DESTEST cases"
-            df_destest_cases = df_destest_cases.iloc[
-                :, 0 : min(len(df_destest_cases.columns), max_DESTEST_cases_on_graph)
-            ]
+            df_destest_cases = df_destest_cases.iloc[:, 0 : min(len(df_destest_cases.columns), max_DESTEST_cases_on_graph)]
 
             "remove prefix from the DESDEST df column names"
             prefix = p + " - "
-            list_destest_cases = list(
-                df_destest_cases.columns.str.lstrip(prefix)
-            )  # Get again list DESTEST from the df just to be sure it's in the same order
+            list_destest_cases = list(df_destest_cases.columns.str.lstrip(prefix))  # Get again list DESTEST from the df just to be sure it's in the same order
             df_destest_cases.columns = list_destest_cases
 
             "get data from reference (including time vectors)"
             ref_df_time = reference_df.iloc[:, 0:2]
-            ref_df_data = pd.DataFrame(reference_df[p])
+            ref_df_data = reference_df[p]
             ref_df_data.columns = ["Reference"]
 
-            "Set min and max of the time series"
-            xmin = np.datetime64(d + " 00:00:00")
-            xmax = xmin + np.timedelta64(1, "D")  # Add one full day
-
-            "Find indexes of min max in timestamp series"
-            x = ref_df_time["Date and Time"]  # Time vector
-            xmin_index = list(x).index(xmin)
-            xmax_index = list(x).index(xmax)
-
-            x = x[xmin_index : xmax_index + 1]
+            "Time stamp series"
+            x = ref_df_time["Elapsed time [sec]"]  # Time vector [Elapsed time [ec]]
+            x = x / 3600  # Format into hours
 
             if not no_user_test:
-                y = df_user_test_data[p][xmin_index : xmax_index + 1]
+                y = df_user_test_data[p].sort_values(ascending=False)
                 plt.plot(x, y, label="User Test", color="red", linewidth=2)
 
             "Plot ref line"
-            y = ref_df_data[xmin_index : xmax_index + 1]
+            y = ref_df_data.sort_values(ascending=False)
             plt.plot(x, y, label="Reference", color="black", linewidth=2)
 
             "Plot other lines"
             for c in list_destest_cases:
-                y = df_destest_cases[c][xmin_index : xmax_index + 1]
+                y = df_destest_cases[c].sort_values(ascending=False)
                 plt.plot(x, y, label=c, linewidth=0.5)
 
             "Format plot"
-            plt.xlabel("Date and Time")
+            plt.xlabel("Hours")
             plt.ylabel(p)
 
-            ax = plt.gca()  # get the current axes
-
-            ax.set_xlim(xmin, xmax)
-
-            ax.xaxis.set_minor_locator(dates.HourLocator(interval=4))  # every 4 hours
-            ax.xaxis.set_minor_formatter(
-                dates.DateFormatter("%H:%M")
-            )  # hours and minutes
-            ax.xaxis.set_major_locator(dates.DayLocator(interval=1))  # every day
-            ax.xaxis.set_major_formatter(
-                dates.DateFormatter("%H:%M\n%Y-%m-%d")
-            )  # Show date only at each midnight 00:00
-
-            plt.title(p + str(" on the ") + str(d))
+            plt.title(str("Time distribution of ") + p)
             plt.legend()
 
             plt.show()  # Display a figure
 
-    # Time distribution graphs ################################################
+            "Update progress bar"
+            progress["value"] = 80 + 10 * i / len(list_parameters)
+            gui.update_idletasks()
 
-    for p in list_parameters:
-        "Get data from df_DESTEST_data, df_user_test_data and reference_df to limit max graphs"
-
-        "Filter df columns that contains the current parameter of interest"
-        list_boolean_targets = list(
-            p in name for name in df_DESTEST_data.columns
-        )  # Boolean list based on condition "p" in "name" with loop on "name"
-        list_name_targets = list(
-            df_DESTEST_data.columns[list_boolean_targets]
-        )  # Get all corresponding column names with "p" in it
-        df_destest_cases = df_DESTEST_data[
-            list_name_targets
-        ]  # Filter df columns that contains the current parameter of interest
-
-        "limit number of DESTEST cases"
-        df_destest_cases = df_destest_cases.iloc[
-            :, 0 : min(len(df_destest_cases.columns), max_DESTEST_cases_on_graph)
-        ]
-
-        "remove prefix from the DESDEST df column names"
-        prefix = p + " - "
-        list_destest_cases = list(
-            df_destest_cases.columns.str.lstrip(prefix)
-        )  # Get again list DESTEST from the df just to be sure it's in the same order
-        df_destest_cases.columns = list_destest_cases
-
-        "get data from reference (including time vectors)"
-        ref_df_time = reference_df.iloc[:, 0:2]
-        ref_df_data = reference_df[p]
-        ref_df_data.columns = ["Reference"]
-
-        "Time stamp series"
-        x = ref_df_time["Elapsed time [sec]"]  # Time vector [Elapsed time [ec]]
-        x = x / 3600  # Format into hours
+        # 1V1 Scattered point plot for User Test Data #########################
 
         if not no_user_test:
-            y = df_user_test_data[p].sort_values(ascending=False)
-            plt.plot(x, y, label="User Test", color="red", linewidth=2)
+            for i, p in enumerate(list_parameters):
 
-        "Plot ref line"
-        y = ref_df_data.sort_values(ascending=False)
-        plt.plot(x, y, label="Reference", color="black", linewidth=2)
+                "get data from reference"
+                x = reference_df[p]
+                ref_df_data.columns = ["Reference"]
+                y = df_user_test_data[p]
 
-        "Plot other lines"
-        for c in list_destest_cases:
-            y = df_destest_cases[c].sort_values(ascending=False)
-            plt.plot(x, y, label=c, linewidth=0.5)
+                plt.scatter(x, y, color="red", alpha=0.05, s=10)  # No label
+                plt.plot([], [], "o", label="User Test Data", color="red")  # Empty plot to get the correct legend marker size
 
-        "Format plot"
-        plt.xlabel("Hours")
-        plt.ylabel(p)
+                "Plot linear fit lines"
+                m, b = np.polyfit(x, y, 1)  # m = slope, b = intercept
+                plt.plot(
+                    x,
+                    m * x + b,
+                    label="Linear Fitting Function (m*x+b)",
+                    color="blue",
+                    linewidth=2)
 
-        plt.title(str("Time distribution of ") + p)
-        plt.legend()
+                "Plot y=x line"
+                x = [min(list(x) + list(y)), max(list(x) + list(y))]
+                y = x
+                plt.plot(x, y, label="Y = X (Test = Reference) Line", color="black", linewidth=2)
 
-        plt.show()  # Display a figure
+                "Format plot"
+                plt.xlabel("Reference: " + p)
+                plt.ylabel("User Test: " + p)
 
-    # 1V1 Scattered point plot for User Test Data #############################
+                plt.title(str("User Test vs Reference Comparison: ") + p)
+                plt.legend(loc="upper left")
 
-    if not no_user_test:
-        for p in list_parameters:
-
-            "get data from reference"
-            x = reference_df[p]
-            ref_df_data.columns = ["Reference"]
-            y = df_user_test_data[p]
-
-            plt.scatter(x, y, color="red", alpha=0.05, s=10)  # No label
-            plt.plot(
-                [], [], "o", label="User Test Data", color="red"
-            )  # Empty plot to get the correct legend marker size
-
-            "Plot linear fit lines"
-            m, b = np.polyfit(x, y, 1)  # m = slope, b = intercept
-            plt.plot(
-                x,
-                m * x + b,
-                label="Linear Fitting Function (m*x+b)",
-                color="blue",
-                linewidth=2,
-            )
-
-            "Plot y=x line"
-            x = [min(list(x) + list(y)), max(list(x) + list(y))]
-            y = x
-            plt.plot(
-                x, y, label="Y = X (Test = Reference) Line", color="black", linewidth=2
-            )
-
-            "Format plot"
-            plt.xlabel("Reference: " + p)
-            plt.ylabel("User Test: " + p)
-
-            plt.title(str("User Test vs Reference Comparison: ") + p)
-            plt.legend(loc="upper left")
-
-            plt.show()  # Display a figure
-
-    return
+                plt.show()  # Display a figure
+            
+                "Update progress bar"
+                progress["value"] = 90 + 10 * i / len(list_parameters)
+                gui.update_idletasks()
+    
+        "Update progress bar"
+        progress["value"] = 100
+        gui.update_idletasks()
+    
+    except:
+        gui.destroy()
+        raise
+    
+    else:
+        gui.destroy()
+        return
 
 
 ###############################################################################
 ###                         DESTEST comparison (main)                       ###
 ###############################################################################
-
 
 def DESTEST_comparison(echo=False):
 
@@ -4179,12 +3668,8 @@ def DESTEST_comparison(echo=False):
     "Github server information"
     server_info.user = "ibpsa"  # Name of the Github
     server_info.repository = "project1-destest"  # name of the repository
-    server_info.url = "https://api.github.com/repos/{}/{}/git/trees/master?recursive=1".format(
-        server_info.user, server_info.repository
-    )  # Recursive to get sub-folders as well
-    server_info.root_raw_data = (
-        "https://raw.githubusercontent.com/"
-    )  # Read data file from raw.githubusercontent.com
+    server_info.url = "https://api.github.com/repos/{}/{}/git/trees/master?recursive=1".format(server_info.user, server_info.repository)  # Recursive to get sub-folders as well
+    server_info.root_raw_data = ("https://raw.githubusercontent.com/")  # Read data file from raw.githubusercontent.com
     server_info.master_folder_name = "/master/"
 
     "KPIs / Comparison Metrics implemented in the module"
@@ -4195,8 +3680,7 @@ def DESTEST_comparison(echo=False):
         "R squared (coefficient of determination) [-]",
         "RMSE [-]",
         "RMSLE [-]",
-        "CVRMSE [%]",
-    ]
+        "CVRMSE [%]"]
 
     "Dictionary for the corresponding list of implemented KPIs and comparison metrics"
     "Include min, max and average as well"
@@ -4211,8 +3695,7 @@ def DESTEST_comparison(echo=False):
         "Minimum": function_Minimum,
         "Maximum": function_Maximum,
         "Average": function_Average,
-        "Standard Deviation": function_std_dev,
-    }
+        "Standard Deviation": function_std_dev}
 
     "Dictionary for the grading system (best_highest, best_lowest or best_zero) for the implemented KPIs"
     "Does not include min, max and average as well"
@@ -4223,8 +3706,7 @@ def DESTEST_comparison(echo=False):
         "R squared (coefficient of determination) [-]": "best_highest",
         "RMSE [-]": "best_zero",
         "RMSLE [-]": "best_zero",
-        "CVRMSE [%]": "best_zero",
-    }
+        "CVRMSE [%]": "best_zero"}
 
     "List of parameters to be found in the parameter file"
     list_parameters_to_find = [
@@ -4237,8 +3719,7 @@ def DESTEST_comparison(echo=False):
         "list of default KPI_weights:",
         "sampling time interval [sec]:",
         "start date time:",
-        "list typical days:",
-    ]
+        "list typical days:"]
 
     "Limit the number of DESTEST cases visible on the result graphs to improve readability of the graph"
     max_DESTEST_cases_on_graph = 10
@@ -4254,9 +3735,7 @@ def DESTEST_comparison(echo=False):
         welcome_message(echo)
 
     except Abort_exception:  # If user closes gui window
-        message = str(
-            "The user aborted the procedure.\nThe procedure is terminated immediately."
-        )
+        message = "The user aborted the procedure.\nThe procedure is terminated immediately."
         if echo:
             print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
@@ -4267,9 +3746,7 @@ def DESTEST_comparison(echo=False):
         raise  # Raise the current error to stop the execution. No need of return after raise
 
     except:  # If any other error occurs (absorbs the error raise)
-        message = str(
-            "An error has occurred.\nThe procedure is terminated immediately."
-        )
+        message = "An error has occurred.\nThe procedure is terminated immediately."
         if echo:
             print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
@@ -4288,9 +3765,7 @@ def DESTEST_comparison(echo=False):
         case_type = prompt_user_case_type(echo)
 
     except Abort_exception:  # If user closes gui window
-        message = str(
-            "The user aborted the procedure.\nThe procedure is terminated immediately."
-        )
+        message = "The user aborted the procedure.\nThe procedure is terminated immediately."
         if echo:
             print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
@@ -4301,9 +3776,7 @@ def DESTEST_comparison(echo=False):
         raise  # Raise the current error to stop the execution. No need of return after raise
 
     except:  # If any other error occurs (absorbs the error raise)
-        message = str(
-            "An error has occurred: No valid case type could be selected.\n\nThe procedure is terminated immediately."
-        )
+        message = "An error has occurred: No valid case type could be selected.\n\nThe procedure is terminated immediately."
         if echo:
             print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
@@ -4316,22 +3789,16 @@ def DESTEST_comparison(echo=False):
     try:
         "Select file filter parameters"
         if case_type == "Building":
-            filtering_code, parameter_file_name = prompt_user_case_characteristics_building(
-                echo
-            )
+            filtering_code, parameter_file_name = prompt_user_case_characteristics_building(echo)
 
         elif case_type == "District Heating Network":
-            filtering_code, parameter_file_name = prompt_user_case_characteristics_network(
-                echo
-            )
+            filtering_code, parameter_file_name = prompt_user_case_characteristics_network(echo)
 
         else:
             Exception("Wrong case type")
 
     except Abort_exception:  # If user closes gui window
-        message = str(
-            "The user aborted the procedure.\nThe procedure is terminated immediately."
-        )
+        message = "The user aborted the procedure.\nThe procedure is terminated immediately."
         if echo:
             print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
@@ -4342,9 +3809,7 @@ def DESTEST_comparison(echo=False):
         raise  # Raise the current error to stop the execution. No need of return after raise
 
     except:  # If any other error occurs (absorbs the error raise)
-        message = str(
-            "An error has occurred: No valid parameter file could be found.\n\nThe procedure is terminated immediately."
-        )
+        message = "An error has occurred: No valid parameter file could be found.\n\nThe procedure is terminated immediately."
         if echo:
             print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
@@ -4363,12 +3828,10 @@ def DESTEST_comparison(echo=False):
             parameter_file_name,
             list_implemented_KPIs,
             list_parameters_to_find,
-            echo,
-        )
+            echo)
+        
     except:  # If any other error occurs (absorbs the error raise)
-        message = str(
-            "An error has occurred: No valid DESTEST parameters file could be loaded correctly.\n\nThe procedure is terminated immediately."
-        )
+        message = "An error has occurred: No valid DESTEST parameters file could be loaded correctly.\n\nThe procedure is terminated immediately."
         if echo:
             print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
@@ -4382,20 +3845,12 @@ def DESTEST_comparison(echo=False):
         if echo:
             print("\nThe parameters have been successfully loaded")
             print("Number of data columns:", parameters.nbr_data_column)
-            print(
-                "Length header data files (number of lines):", parameters.header_length
-            )
+            print("Length header data files (number of lines):", parameters.header_length)
             print("First data line (line number):", parameters.first_line_data)
             print("Number of data rows:", parameters.nbr_data_rows)
             print("List of column names:", parameters.list_column_names)
-            print(
-                "List of default KPIs for the DESTEST comparison:",
-                parameters.list_default_KPIs,
-            )
-            print(
-                "List of default KPI weights for the DESTEST comparison:",
-                parameters.list_default_KPI_weights,
-            )
+            print("List of default KPIs for the DESTEST comparison:", parameters.list_default_KPIs)
+            print("List of default KPI weights for the DESTEST comparison:", parameters.list_default_KPI_weights)
             print("The sampling time [sec]:", parameters.sampling_time)
 
     # Check DESTEST online repository #########################################
@@ -4405,14 +3860,11 @@ def DESTEST_comparison(echo=False):
 
     try:
         "Check validity of online DESTEST folder containing all the pool of data files"
-        validity_folder, df_valid, list_filtered_data_files, valid_file_full_path_ur = check_validity_DESTEST_folder(
-            filtering_code, parameters, server_info, echo
-        )
+        validity_folder, df_valid, list_filtered_data_files, valid_file_full_path_url = check_validity_DESTEST_folder(
+            filtering_code, parameters, server_info, echo)
 
     except:  # If any other error occurs (absorbs the error raise)
-        message = str(
-            "An error has occurred: No valid data could be found in the online DESTEST repository.\n\nThe procedure is terminated immediately."
-        )
+        message = "An error has occurred: No valid data could be found in the online DESTEST repository.\n\nThe procedure is terminated immediately."
         if echo:
             print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
@@ -4427,9 +3879,7 @@ def DESTEST_comparison(echo=False):
             if echo:
                 print("\nThe online DESTEST repository is valid.")
         else:
-            message = str(
-                "An error has occurred: The online DESTEST repository is not valid.\n\nThe procedure is terminated immediately."
-            )
+            message = "An error has occurred: The online DESTEST repository is not valid.\n\nThe procedure is terminated immediately."
             if echo:
                 print("\n", message)
             "Create a tk gui, hide it immediately, and destroy it after message clicked"
@@ -4452,13 +3902,10 @@ def DESTEST_comparison(echo=False):
             server_info,
             parameters,
             df_valid,
-            echo,
-        )
+            echo)
 
     except:  # If any other error occurs (absorbs the error raise)
-        message = str(
-            "An error has occurred: No valid DESTEST data file could be loaded.\n\nThe procedure is terminated immediately."
-        )
+        message = "An error has occurred: No valid DESTEST data file could be loaded.\n\nThe procedure is terminated immediately."
         if echo:
             print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
@@ -4484,14 +3931,11 @@ def DESTEST_comparison(echo=False):
             server_info,
             full_path_file_parameter_file,
             filtering_code,
-            valid_file_full_path_ur,
-            echo,
-        )
+            valid_file_full_path_url,
+            echo)
 
     except Abort_exception:  # If user closes gui window
-        message = str(
-            "The user aborted the procedure.\nThe procedure is terminated immediately."
-        )
+        message = "The user aborted the procedure.\nThe procedure is terminated immediately."
         if echo:
             print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
@@ -4502,9 +3946,7 @@ def DESTEST_comparison(echo=False):
         raise  # Raise the current error to stop the execution. No need of return after raise
 
     except:  # If any other error occurs (absorbs the error raise)
-        message = str(
-            "An error has occurred: No valid user test data file could be found.\n\nThe procedure is terminated immediately."
-        )
+        message = "An error has occurred: No valid user test data file could be found.\n\nThe procedure is terminated immediately."
         if echo:
             print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
@@ -4526,14 +3968,10 @@ def DESTEST_comparison(echo=False):
 
     try:
         "Reload user test data file into df"
-        df_user_test_data = load_user_test_data(
-            user_test_data_file, parameters, no_user_test, echo
-        )
+        df_user_test_data = load_user_test_data(user_test_data_file, parameters, no_user_test, echo)
 
     except:  # If any other error occurs (absorbs the error raise)
-        message = str(
-            "An error has occurred: No valid user test data file could be found.\n\nThe procedure is terminated immediately."
-        )
+        message = "An error has occurred: No valid user test data file could be found.\n\nThe procedure is terminated immediately."
         if echo:
             print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
@@ -4549,14 +3987,10 @@ def DESTEST_comparison(echo=False):
         print("\nPrompt DESTEST KPIs and KPI weights from user for DESTEST comparison")
 
     try:
-        list_KPIs, list_KPI_weights = DESTEST_KPIs_selection(
-            parameters, list_implemented_KPIs, echo
-        )
+        list_KPIs, list_KPI_weights = DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo)
 
     except:  # If any other error occurs (absorbs the error raise)
-        message = str(
-            "An error has occurred: No valid list of KPI could be determined.\n\nThe procedure is terminated immediately."
-        )
+        message = "An error has occurred: No valid list of KPI could be determined.\n\nThe procedure is terminated immediately."
         if echo:
             print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
@@ -4590,12 +4024,9 @@ def DESTEST_comparison(echo=False):
             list_KPI_weights,
             dictionnary_KPI_functions,
             dictionnary_KPI_grade_system,
-            echo,
-        )
+            echo)
     except:
-        message = str(
-            "An error has occurred: The DESTEST comparison calculation could not be carried out.\n\nThe procedure is terminated immediately."
-        )
+        message = "An error has occurred: The DESTEST comparison calculation could not be carried out.\n\nThe procedure is terminated immediately."
         if echo:
             print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
@@ -4622,12 +4053,9 @@ def DESTEST_comparison(echo=False):
             df_user_test_data,
             reference_df,
             df_DESTEST_data,
-            echo=False,
-        )
+            echo=False)
     except:
-        message = str(
-            "An error has occurred: The DESTEST comparison plots could not be generated.\n\nThe procedure is terminated immediately."
-        )
+        message = "An error has occurred: The DESTEST comparison plots could not be generated.\n\nThe procedure is terminated immediately."
         if echo:
             print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
