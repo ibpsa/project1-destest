@@ -1,8 +1,15 @@
 # IBPSA Project 1 - District Energy Simulation Test Procedure (DESTEST)
 
+This repository contains the DESTEST (District Energy Simulation Test Procedure) developed within the IBPSA Project 1.
+
 To establish reliable, decarbonized and sustainable cities, it is necessary to integrate all energy grids together with the different energy suppliers and end-users during the design, optimization and operation phases. To that matter, accurate urban-scale numerical models have to be developed to dynamically simulate buildings, infrastructures, networks, energy and matter fluxes. The multi-physics modelling language Modelica is particularly well-suited for that purpose.
 
-The goal of the IBPSA Project 1 is to develop a BIM/GIS and Modelica framework for building and community energy simulation. Within the IBPSA Project 1, the DESTEST (Work Package 3.1) aims at testing district energy system simulations tools, and in particular, validate the urban energy systems models of the dedicated Modelica libraries.
+The goal of the IBPSA Project 1 is to develop a BIM/GIS and Modelica framework for building and community energy simulation. Within the IBPSA Project 1, the DESTEST (Work Package 3.1) aims at testing district energy system simulations tools, and in particular, validate the urban energy systems models of the dedicated Modelica libraries. These currently dedicated Modelica libraries are as follows:
+* _AixLib_, from RWTH Aachen University, Germany: https://github.com/RWTH-EBC/AixLib
+ * _Buildings_, from LBNL, Berkeley, CA, USA: http://simulationresearch.lbl.gov/modelica
+ * _BuildingSystems_, from UdK Berlin, Germany: http://www.modelica-buildingsystems.de
+ * _IDEAS_ from KU Leuven, Belgium: https://github.com/open-ideas/IDEAS
+All these libraries above are based on the core library _Modelica IBPSA library_: https://github.com/ibpsa/modelica-ibpsa
 
 The DESTEST procedure consists in the comparison, benchmarking and thorough verification of a number of common exercises. In each common exercise, different participants are modelling and simulating a given case of buildings and/or energy grid with well-defined properties, characteristics, grid topology, weather conditions, and boundary conditions. The participants can use any suitable commercial or non-commercial simulation tools or the dedicated Modelica libraries. The simulation results of all participants are compared with each other by a dedicated Python-based time series comparison tool. Each common exercise is focusing on a particular aspect of the model output.
 
