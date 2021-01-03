@@ -92,7 +92,7 @@ On that step, the validity of the online DESTEST repository is verified as follo
 
 ## Loading DESTEST Data
 
-On that step, all data files found in the online DESTEST repository that fit the name-tag of the common exercise case type and characteristics are checked for validity (according to the corresponding parameter file) and loaded if validated. The program indicates to the user the total number of data files that fit the name-tag of the case, and the number of valid and invalid files among these.
+On that step, all data files found in the online DESTEST repository that fit the name-tag of the common exercise case type and characteristics are checked for validity (according to the corresponding parameter file) and loaded if validated. The program indicates to the user the total number of data files that fit the name-tag of the case, and the number of valid and invalid files among those.
 
 ![Loading the pool of data from the DESTEST repository](https://github.com/ibpsa/project1-destest/blob/HichamJohra-patch-guidelines_and_help_comparison_tool/comparison-tool/icon/GUI%20Figure%206.png)
 
@@ -153,7 +153,7 @@ Conversely, if one set of results has the worst score for all KPIs / Comparison 
 
 ...
 
-![Generation of the Output Analysis Report with Figures and Tables](https://github.com/ibpsa/project1-destest/blob/HichamJohra-patch-guidelines_and_help_comparison_tool/comparison-tool/icon/GUI%20Figure%209.png)
+![Generation of the Output Analysis Report with Figures and Tables](https://github.com/ibpsa/project1-destest/blob/HichamJohra-patch-guidelines_and_help_comparison_tool/comparison-tool/icon/GUI%20Figure%2010.png)
 
 *Generation of the Output Analysis Report with Figures and Tables.*
 
