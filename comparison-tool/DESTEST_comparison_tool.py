@@ -4084,7 +4084,7 @@ def DESTEST_plots(
 
                 "remove prefix from the DESDEST df column names"
                 prefix = p + " - "
-                list_destest_cases = list(df_destest_cases.columns.str.lstrip(prefix))  # Get again list DESTEST from the df just to be sure it's in the same order
+                list_destest_cases = list(df_destest_cases.columns.str.replace(prefix, ""))  # Get again list DESTEST from the df just to be sure it's in the same order. Use .replace()
                 df_destest_cases.columns = list_destest_cases
 
                 "get data from reference (including time vectors)"
@@ -4166,7 +4166,7 @@ def DESTEST_plots(
 
                 "remove prefix from the DESDEST df column names"
                 prefix = p + " - "
-                list_destest_cases = list(df_destest_cases.columns.str.lstrip(prefix))  # Get again list DESTEST from the df just to be sure it's in the same order
+                list_destest_cases = list(df_destest_cases.columns.str.replace(prefix, ""))  # Get again list DESTEST from the df just to be sure it's in the same order. Use .replace()
                 df_destest_cases.columns = list_destest_cases
 
                 "get data from reference (including time vectors)"
@@ -4243,7 +4243,7 @@ def DESTEST_plots(
 
             "remove prefix from the DESDEST df column names"
             prefix = p + " - "
-            list_destest_cases = list(df_destest_cases.columns.str.lstrip(prefix))  # Get again list DESTEST from the df just to be sure it's in the same order
+            list_destest_cases = list(df_destest_cases.columns.str.replace(prefix, ""))  # Get again list DESTEST from the df just to be sure it's in the same order. Use .replace()
             df_destest_cases.columns = list_destest_cases
 
             "get data from reference (including time vectors)"
