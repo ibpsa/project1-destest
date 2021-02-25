@@ -32,6 +32,8 @@ The DESTEST Comparison Tool is a linear Graphical User Interface (GUI) that guid
 The comparison consists of the calculation of the difference between the time series of the different output result parameters. This difference calculation is performed according to different Key Performance Indicators (KPIs) / Comparison Metrics and grading weights that can be specified by the user.
 The User can stop the DESTEST Comparison Procedure at any time by closing the GUI window (cross icon on the upper right corner of the GUI window).
 
+On the welcome window, the user can read a short overview of the different steps of the DESTEST comparison procedure. The user can open the help file, start the procedure or switch the echo mode on and off by pressing the dedicated buttons. If the echo mode is on, feedback messages are displayed at the different steps of the DESTEST procedure, figures and tables are displayed in the Python IDE at the end of the procedure.
+
 ![Welcome message at the start of the GUI for the DESTEST Comparison Tool Procedure](https://github.com/ibpsa/project1-destest/blob/HichamJohra-patch-guidelines_and_help_comparison_tool/comparison-tool/icon/GUI%20Figure%201.png)
 
 *Welcome message at the start of the GUI for the DESTEST Comparison Tool Procedure.*
