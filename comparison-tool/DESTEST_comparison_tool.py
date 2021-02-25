@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- #######################################################
 #                                                                             #
 #   Hicham Johra                                                              #
-#   2021-01-07                                                                #
+#   2021-02-22                                                                #
 #   Aalborg University, Denmark                                               #
 #   hj@build.aau.dk                                                           #
 #                                                                             #
@@ -16,14 +16,19 @@
 "To-do list" "----------------------------------------------------------------"
 ###############################################################################
 """
-- Add function for generation of output analysis report as PDF or Excel (Konstantin)
+- Add function for generation of output analysis report as PDF or Excel and
+create a folder with all original figures in HD
+
+- Other reference construction methods: median. windsored mean, ML, etc.
 
 - Add "send data" button to send pull-request the User Test Data File to the GitHub
 repository if the file is valid. Then format the data file correctly, ask for
 a user name, generate name file with user name + tag-name of the common exercise case
 check that this file name is not already in the list of data files found in the
 online repository under that name-tag if not okay, then cancel operation.
-If it's all correct, then generate pull-request in the right sub-folder
+If it's all correct, then generate pull-request in the right sub-folder.
+Only available for the online version. Offline version sends the validated data
+by email to hj@build.aau.dk
 """
 ###############################################################################
 
@@ -42,7 +47,7 @@ Description:
     of DESTEST tests in a dedicated Github online folder and the specifically
     selected csv file of DESTEST test user test (current test) and calculates
     comparison metrics between the user test data and the reference (average profile)
-    created from all the other DESTEST test files.
+    created from all the other DESTEST test files (excluding the current user test data).
     If run directly, the module execute a default script that runs a comparison
     of the selected DESTEST data.
 
@@ -98,7 +103,7 @@ try:
 except:
     message = str("""An error has occurred: Some libraries / packages could not be imported correctly.
                   
-    You should install (using pip) these missing libraries / packages to run the script correctly.
+    You should install (using pip install) these missing libraries / packages to run the script correctly.
     
     The script is terminated immediately.""")
     
@@ -108,9 +113,6 @@ except:
     mbox.showerror("Error", message)  # Popup message window
     gui.destroy()
     raise
-
-else:
-    print("\nLoading of libraries completed")
 
 
 "#############################################################################"
@@ -157,8 +159,7 @@ def get_full_path_to_online_file(file_name, ServerInfo, echo=False):
             )
 
     except:
-        if echo:
-            print("\nWrong file path generation.")
+        if echo: print("\nWrong file path generation.")
             
         raise
         
@@ -210,6 +211,23 @@ def Calculate_daily_amplitude(input_vector):
 "#############################################################################"
 "##                   KPIs / Comparison Metrics functions                   ##"
 "#############################################################################"
+
+###############################################################################
+###                                MBE [-]                                  ###
+###############################################################################
+
+def function_MBE(reference_vector, test_case_vector, date_and_time_stamp_vect):
+    """Calculate the Mean Bias Error (MBE) of a case compared to reference.
+    MBE with all data points.
+    """
+
+    "Difference point by point for test case compared to reference profile"
+    diff_case_ref = test_case_vector - reference_vector  # Case - Reference
+
+    MBE = (diff_case_ref.sum()) / (len(reference_vector))
+
+    return round(MBE, 2)
+
 
 ###############################################################################
 ###                                NMBE [%]                                 ###
@@ -333,12 +351,38 @@ def function_R_squared_coeff_determination(
 
 
 ###############################################################################
+###                                 MSE [-]                                 ###
+###############################################################################
+
+def function_MSE(reference_vector, test_case_vector, date_and_time_stamp_vect):
+    """Calculate the Mean Squared Error (MSE) of a case compared to a
+    reference [-]: MSE with all data points.
+    """
+
+    "y: observations / reality / measured data / reference data"
+    "f: prediction / fitted data / modeled data / test data"
+
+    y = reference_vector
+    f = test_case_vector
+
+    squares_diff = (y - f) ** 2
+
+    sum_squares_diff = squares_diff.sum()
+
+    nbr_samples = len(test_case_vector)
+
+    MSE = sum_squares_diff / nbr_samples # Average the squared differences (residuals)
+
+    return round(MSE, 2)
+
+
+###############################################################################
 ###                                 RMSE [-]                                ###
 ###############################################################################
 
 def function_RMSE(reference_vector, test_case_vector, date_and_time_stamp_vect):
     """Calculate the Root Mean Squared Error (RMSE) of a case 
-    compared to a reference [%]: RMSLE with all data points.
+    compared to a reference [-]: RMSE with all data points.
     """
 
     "y: observations / reality / measured data / reference data"
@@ -366,7 +410,7 @@ def function_RMSE(reference_vector, test_case_vector, date_and_time_stamp_vect):
 
 def function_RMSLE(reference_vector, test_case_vector, date_and_time_stamp_vect):
     """Calculate the Root Mean Squared Logarithmic Error (RMSLE) of a case 
-    compared to a reference [%]: RMSLE with all data points.
+    compared to a reference [-]: RMSLE with all data points.
     """
 
     "y: observations / reality / measured data / reference data"
@@ -388,7 +432,7 @@ def function_RMSLE(reference_vector, test_case_vector, date_and_time_stamp_vect)
 
     RMSLE = np.sqrt(average_squares_diff)
 
-    return round(RMSLE, 2)
+    return round(RMSLE, 5)
 
 
 ###############################################################################
@@ -417,6 +461,76 @@ def function_CVRMSE(reference_vector, test_case_vector, date_and_time_stamp_vect
     CVRMSE = ((np.sqrt(sum_squares / nbr_samples)) / avrg_ref) * 100
 
     return round(CVRMSE, 2)
+
+
+###############################################################################
+###                                 NRMSE [%]                               ###
+###############################################################################
+
+def function_NRMSE(reference_vector, test_case_vector, date_and_time_stamp_vect):
+    """Calculate the Normalized Root Mean Squared Error (NRMSE) of a case 
+    compared to a reference [%]: NRMSE with all data points.
+    The RMSE is normalized by the range (amplitude = max - min) of the
+    reference data.
+    """
+
+    "y: observations / reality / measured data / reference data"
+    "f: prediction / fitted data / modeled data / test data"
+
+    y = reference_vector
+    f = test_case_vector
+    
+    amplitude = max(reference_vector) - min(reference_vector)
+
+    squares_diff = (y - f) ** 2
+
+    sum_squares_diff = squares_diff.sum()
+
+    nbr_samples = len(test_case_vector)
+
+    average_squares_diff = sum_squares_diff / nbr_samples
+
+    RMSE = np.sqrt(average_squares_diff)
+    
+    NRMSE = (RMSE / amplitude) * 100
+
+    return round(NRMSE, 2)
+
+
+###############################################################################
+###                                RMSEIQR [%]                              ###
+###############################################################################
+
+def function_RMSEIQR(reference_vector, test_case_vector, date_and_time_stamp_vect):
+    """Calculate the IQR-Normalized Root Mean Squared Error (RMSEIQR) of a case 
+    compared to a reference [%]: RMSEIQR with all data points.
+    The RMSE is normalized by the interquartile range (IQR) of the reference
+    data.
+    """
+
+    "y: observations / reality / measured data / reference data"
+    "f: prediction / fitted data / modeled data / test data"
+
+    y = reference_vector
+    f = test_case_vector
+    
+    "IQR calculation"
+    q75, q25 = np.percentile(y, [75 ,25]) # 75th and 25th percentiles of ref data
+    IQR = q75 - q25
+    
+    squares_diff = (y - f) ** 2
+
+    sum_squares_diff = squares_diff.sum()
+
+    nbr_samples = len(test_case_vector)
+
+    average_squares_diff = sum_squares_diff / nbr_samples
+
+    RMSE = np.sqrt(average_squares_diff)
+    
+    RMSEIQR = (RMSE / IQR) * 100
+
+    return round(RMSEIQR, 2)
 
 
 ###############################################################################
@@ -467,7 +581,7 @@ def function_std_dev(reference_vector, test_case_vector, date_and_time_stamp_vec
 ###                   Welcome message with link to help                     ###
 ###############################################################################
 
-def welcome_message(echo=False):
+def welcome_message():
     """Generate a GUI to display and welcome message to shortly introduce the 
     DESTEST online comparison GUI to the user and give access to online 
     documentation (markdown file from DESTEST GitHub repository).
@@ -502,11 +616,14 @@ def welcome_message(echo=False):
     gui.title("Welcome")
     screen_width = gui.winfo_screenwidth()
     screen_height = gui.winfo_screenheight()
-    gui.geometry("440x305+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window
+    gui.geometry("470x308+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window
     gui.lift()  # Place on top of all Python windows
     gui.attributes("-topmost", True)  # Place on top of all windows (all the time)
     gui.attributes("-topmost", False)  # Disable on top all the time
     gui.resizable(width=False, height=False)  # Disable resizing of the window
+
+    "Initialize local variables"
+    echo = False
 
     # Sub-function: get_help ##################################################
 
@@ -520,12 +637,23 @@ def welcome_message(echo=False):
 
         except:
             mbox.showerror("Error", "The help file could not be opened.")
-            if echo:
-                print("The help file could not be opened.")
+            if echo: print("The help file could not be opened.")
 
         else:
-            if echo:
-                print("The help file has been opened.")
+            if echo: print("The help file has been opened.")
+
+    # End Sub-function ########################################################
+
+    # Sub-function: switch echo mode ##########################################
+
+    def switch_echo():
+        nonlocal echo
+        echo = not(echo)
+        
+        if echo:
+            switch_echo_button.config(text="Echo is ON ")
+        else:
+            switch_echo_button.config(text="Echo is OFF")
 
     # End Sub-function ########################################################
 
@@ -541,7 +669,7 @@ def welcome_message(echo=False):
     # Pack/grid widgets and generate GUI ######################################
 
     "Pack/grid the different buttons and labels on the GUI window"
-    frame1 = tk.LabelFrame(gui, width=420, height=228)
+    frame1 = tk.LabelFrame(gui, width=450, height=230)
     frame1.pack(padx=10, pady=10)
     frame1.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
@@ -558,13 +686,14 @@ def welcome_message(echo=False):
     - Generation of the output analysis report with figures and tables.
     
     For more information, help and guidelines, click the "HELP" button.
-    To start the DESTEST comparison procedure, click the "START" button."""
+    To start the DESTEST comparison procedure, click the "START" button.
+    Activate console feedback and show figures in IDE, click the "Echo" button."""
     
     my_label = tk.Label(frame1, text=welcome_message_text)  # Grid the welcome message on the window
     my_label.pack(padx=10, pady=10)
 
     "Frame 2"
-    frame2 = tk.LabelFrame(gui, width=420, height=42)
+    frame2 = tk.LabelFrame(gui, width=450, height=42)
     frame2.pack(padx=10, pady=(0, 5))
     frame2.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
@@ -577,17 +706,21 @@ def welcome_message(echo=False):
     label2.grid(row=2, column=2)
     label2.config(font=("Courier", 2))
 
-    label3 = tk.Label(frame2,text="                                                                          ")
-    label3.grid(row=1, column=2)
+    label3 = tk.Label(frame2,text="            ")
+    label3.grid(row=1, column=0)
     label3.config(font=("Courier", 2))
 
-    label4 = tk.Label(frame2, text="                                         ")
-    label4.grid(row=1, column=0)
+    label4 = tk.Label(frame2, text="                                                                ")
+    label4.grid(row=1, column=2)
     label4.config(font=("Courier", 2))
 
-    label5 = tk.Label(frame2, text="                                         ")
+    label5 = tk.Label(frame2, text="                                             ")
     label5.grid(row=1, column=4)
     label5.config(font=("Courier", 2))
+
+    label6 = tk.Label(frame2, text="           ")
+    label6.grid(row=1, column=6)
+    label6.config(font=("Courier", 2))
 
     "HELP button"
     help_button = tk.Button(frame2, text="HELP", command=lambda: get_help())  # Create button executing function
@@ -596,11 +729,18 @@ def welcome_message(echo=False):
     "START button"
     start_button = tk.Button(frame2, text="START", command=lambda: start())  # Create button executing function
     start_button.grid(row=1, column=3)
+    
+    "SWITCH ECHO button: default state is OFF"
+    switch_echo_button = tk.Button(frame2, text="Echo is OFF", command=lambda: switch_echo())  # Create button executing function
+    switch_echo_button.grid(row=1, column=5)
 
     "Generate a mainLoop to activate the gui"
     gui.mainloop()  # Run loop updating the window
-    "No output of GUI once closed"
+    
+    # Outputs of GUI ##########################################################
 
+    "Output of GUI once closed"
+    return echo
 
 ###############################################################################
 ###                      Prompt user for case type                          ###
@@ -662,7 +802,7 @@ def prompt_user_case_type(echo=False):
     "Frame 1"
     frame1 = tk.LabelFrame(
         gui,
-        text="Case Type for DESTEST Comparison",
+        text="Case type for DESTEST comparison",
         width=400, height=60)
     frame1.pack(padx=10, pady=5)
     frame1.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
@@ -702,8 +842,7 @@ def prompt_user_case_type(echo=False):
     "Output of GUI once closed"
     case_type = selected_case_type.get()
 
-    if echo:
-        print("\nThe selected case type is: ", case_type)
+    if echo: print("\nThe selected case type is: ", case_type)
 
     return case_type
 
@@ -820,7 +959,7 @@ def prompt_user_case_characteristics_building(echo=False):
     "Frame 1"
     frame1 = tk.LabelFrame(
         gui,
-        text="Building Case Characteristics for DESTEST Comparison",
+        text="Building case characteristics for DESTEST comparison",
         width=400, height=140)
     frame1.pack(padx=10, pady=10)
     frame1.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
@@ -1006,7 +1145,7 @@ def prompt_user_case_characteristics_network(echo=False):
     "Frame 1"
     frame1 = tk.LabelFrame(
         gui,
-        text="Network Case Characteristics for DESTEST Comparison",
+        text="Network case characteristics for DESTEST comparison",
         width=400, height=60)
     frame1.pack(padx=10, pady=10)
     frame1.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
@@ -1134,8 +1273,7 @@ def load_parameters(
         "Init empty full path and name file"
         full_path_and_name_file = ""
 
-        if echo:
-            print("\nStart validity test of parameter file")
+        if echo: print("\nStart validity test of parameter file")
 
         "Extract file data for inspection"
         try:
@@ -1154,7 +1292,8 @@ def load_parameters(
                 print(df)
 
         except:
-            print("\nThe selected file cannot be read correctly.\nThe selected file is not valid.")
+            if echo:
+                print("\nThe selected file cannot be read correctly.\nThe selected file is not valid.")
             
             return validity_file, full_path_and_name_file
 
@@ -1206,7 +1345,7 @@ def load_parameters(
                 
             except:  # if the list is not only float or int, there will be an error raised
                 test_result = False
-                print("error test")
+                if echo: print("error test")
             
             finally:
                 validity_vect.append(test_result)
@@ -1221,7 +1360,7 @@ def load_parameters(
             
             except:  # not a proper datetime input, there will be an error
                 test_result = False
-                print("error test")
+                if echo: print("error test")
             
             finally:
                 validity_vect.append(test_result)
@@ -1271,8 +1410,7 @@ def load_parameters(
                     list_txt_files_in_online_folder.append(file_sub_path)
 
             if len(list_txt_files_in_online_folder) == 0:
-                if echo:
-                    print("\nNo file could be found in the online folder.\n")
+                if echo: print("\nNo file could be found in the online folder.\n")
                     
                 raise Exception("No file could be found in the online folder.")
 
@@ -1288,21 +1426,18 @@ def load_parameters(
             list_parameter_files = list(filter(lambda k: parameter_file_name in k, list_txt_files_in_online_folder))
 
             if len(list_parameter_files) == 0:
-                if echo:
-                    print("\nThe parameter file could not be found in the online folder.")
+                if echo: print("\nThe parameter file could not be found in the online folder.")
                     
                 raise Exception("The parameter file could not be found in the online folder.")
 
             elif len(list_parameter_files) > 1:
-                if echo:
-                    print("\nMultiple similar parameter files found in the online folder.")
+                if echo: print("\nMultiple similar parameter files found in the online folder.")
                     
                 raise Exception("Multiple similar parameter files found in the online folder.")
 
             else:
                 file_path_and_name = list_parameter_files[0]
-                if echo:
-                    print("\nThe name of the parameter file is:\n", file_path_and_name)
+                if echo: print("\nThe name of the parameter file is:\n", file_path_and_name)
         except:
             raise
 
@@ -1340,7 +1475,7 @@ def load_parameters(
     try:
         "Load parameters file and extract data"
         df_parameters = pd.read_csv(full_path_and_name_file, sep="\t", header=None)
-        print(df_parameters)
+        if echo: print(df_parameters)
 
         "Update progress bar"
         progress["value"] = 10
@@ -1375,8 +1510,8 @@ def load_parameters(
         progress["value"] = 50
         gui.update_idletasks()
 
-        index = df_parameters[df_parameters[0] == "list of column names:"
-        ].first_valid_index()
+        "Get list of column names"
+        index = df_parameters[df_parameters[0] == "list of column names:"].first_valid_index()
         list_column_names = df_parameters.iloc[index, 1]  # Raw data string
         list_column_names = list_column_names.split(",")  # Split by comma and place in a list
 
@@ -1475,7 +1610,7 @@ def check_validity_DESTEST_folder(filtering_code, parameters, ServerInfo, echo=F
     tk.Tk.report_callback_exception = show_error  # changing the Tk class itself.
 
     "Change the window properties"
-    gui.title("Checking validity")
+    gui.title("Checking Validity")
     screen_width = gui.winfo_screenwidth()
     screen_height = gui.winfo_screenheight()
     gui.geometry("400x80+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window size as a function of screen resolution
@@ -1527,8 +1662,7 @@ def check_validity_DESTEST_folder(filtering_code, parameters, ServerInfo, echo=F
                     list_files_in_online_folder.append(file_sub_path)
 
             if len(list_files_in_online_folder) == 0:
-                if echo:
-                    print("\nNo file could be found in the online folder.\n")
+                if echo: print("\nNo file could be found in the online folder.\n")
                     
                 raise Exception("No file could be found in the online folder.")
 
@@ -1545,12 +1679,10 @@ def check_validity_DESTEST_folder(filtering_code, parameters, ServerInfo, echo=F
             list_filtered_data_files = list(filter(lambda k: filtering_code in k, list_files_in_online_folder))
 
             if len(list_filtered_data_files) == 0:  # No data files in the repository
-                if echo:
-                    print("\nNo data files could be found in the online repository.")
+                if echo: print("\nNo data files could be found in the online repository.")
 
             else:
-                if echo:
-                    print("\nThe filtered data files are:\n", list_filtered_data_files)
+                if echo: print("\nThe filtered data files are:\n", list_filtered_data_files)
 
         except:
             raise
@@ -1567,8 +1699,7 @@ def check_validity_DESTEST_folder(filtering_code, parameters, ServerInfo, echo=F
         validity until finding at least 1 file valid to then allow validity.
         """
 
-        if echo:
-            print("\nStart validity test of DESTEST online repository.")
+        if echo: print("\nStart validity test of DESTEST online repository.")
 
         "Init output variables"
         validity_folder = False
@@ -1599,8 +1730,7 @@ def check_validity_DESTEST_folder(filtering_code, parameters, ServerInfo, echo=F
 
         else:  # If some files, then start looping validity tests
             number_files = len(list_filtered_data_files)
-            if echo:
-                print("\n", number_files, " filtered files have been found.")
+            if echo: print("\n", number_files, " filtered files have been found.")
 
             "Loop through filtered list of files to find at least one valid file"
             for index, f in enumerate(list_filtered_data_files):
@@ -1644,13 +1774,18 @@ def check_validity_DESTEST_folder(filtering_code, parameters, ServerInfo, echo=F
                         test_result = len(df) == Parameters.nbr_data_rows
                         validity_vect.append(test_result)
 
-                        "Check that sampling time is correct in all elapsed time column"
+                        "Check that sampling time is the same in all elapsed time column"
                         sub_df = pd.Series.tolist(df.iloc[:, 0])  # Get the first column containing the elapsed time
                         sub_df1 = sub_df[1:]  # From second element to the last one
                         sub_df2 = sub_df[0:-1]  # From first element to the one before the last one
                         delta_df = list(np.array(sub_df1) - np.array(sub_df2))
                         test_result = (len(set(delta_df)) == 1)  # Check that the length of the set (list of unique elements in a list) is equal to 1
                         validity_vect.append(test_result)
+                        
+                        "Check that sampling time is correct"
+                        if test_result:
+                            test_result = set(delta_df) == {Parameters.sampling_time}
+                            validity_vect.append(test_result)
 
                         "Finally, check that all validity tests are True"
                         validity_file = all(validity_vect)  # AND operator on all list elements
@@ -1660,8 +1795,7 @@ def check_validity_DESTEST_folder(filtering_code, parameters, ServerInfo, echo=F
 
                 finally:
                     if validity_file:  # The first valid file has been found and thus stop the loop and ends the function with return
-                        if echo:
-                            print("File ", f, " is valid.")
+                        if echo: print("File ", f, " is valid.")
 
                         validity_folder = True
                         valid_file_full_path_urll = full_path_and_name_file
@@ -1678,8 +1812,7 @@ def check_validity_DESTEST_folder(filtering_code, parameters, ServerInfo, echo=F
                             valid_file_full_path_urll)
 
                     else:  # If hte current file is not valid then loop to the next one in line
-                        if echo:
-                            print("File ", f, " is not valid.")
+                        if echo: print("File ", f, " is not valid.")
 
                         "Update progress bar"
                         progress["value"] = 100 * (index + 1) / number_files
@@ -1734,8 +1867,7 @@ def check_validity_DESTEST_folder(filtering_code, parameters, ServerInfo, echo=F
 
         formated_list = pd.to_datetime(output_list)
 
-        if echo:
-            print(formated_list)
+        if echo: print(formated_list)
 
         "Create a new df to be added to the valid_df to add the time stamp column"
         new_df = pd.DataFrame(formated_list, columns=["Date and Time"])  # Assign name to the column header in the new df
@@ -1773,8 +1905,7 @@ def check_validity_DESTEST_folder(filtering_code, parameters, ServerInfo, echo=F
                 "Valid data has been found in the online DESTEST repository among the "
                 + str(number_files)
                 + " files.")
-            if echo:
-                print("\n", message)
+            if echo: print("\n", message)
                 
             mbox.showinfo("Success", message)
             gui.destroy()
@@ -1790,8 +1921,7 @@ def check_validity_DESTEST_folder(filtering_code, parameters, ServerInfo, echo=F
                 "No valid data has been found in the online DESTEST repository among the "
                 + str(number_files)
                 + " files.")
-            if echo:
-                print("\n", message)
+            if echo: print("\n", message)
                 
             mbox.showerror("Error", message)
             gui.destroy()
@@ -1833,7 +1963,7 @@ def load_DESTEST_data(
     tk.Tk.report_callback_exception = show_error  # changing the Tk class itself.
 
     "Change the window properties"
-    gui.title("Loading data")
+    gui.title("Loading Data")
     screen_width = gui.winfo_screenwidth()
     screen_height = gui.winfo_screenheight()
     gui.geometry("400x80+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window size as a function of screen resolution
@@ -1863,8 +1993,7 @@ def load_DESTEST_data(
 
     # Main ####################################################################
 
-    if echo:
-        print("\nStart loading DESTEST data files.")
+    if echo: print("\nStart loading DESTEST data files.")
 
     "Init output df with all DESTEST data"
     df_DESTEST_data = df_valid.iloc[:, 0:2]  # Select all lines of 1st and 2nd column of a valid df: time stamp and time in sec
@@ -1911,12 +2040,10 @@ def load_DESTEST_data(
             df.columns = Parameters.list_column_names
 
         except:
-            if echo:
-                print("File ", f, " cannot be read correctly.\nThe file is not valid.")
+            if echo: print("File ", f, " cannot be read correctly.\nThe file is not valid.")
 
         else:
-            if echo:
-                print("File: ", f, " can be read correctly.")
+            if echo: print("File: ", f, " can be read correctly.")
 
             try:  # Validity test of the data in the file
                 validity_vect = []  # Empty vector to store all results from the validity tests
@@ -1933,13 +2060,18 @@ def load_DESTEST_data(
                 test_result = len(df) == Parameters.nbr_data_rows
                 validity_vect.append(test_result)
 
-                "Check that sampling time is correct in all elapsed time column"
+                "Check that sampling time is the same in all elapsed time column"
                 sub_df = pd.Series.tolist(df.iloc[:, 0])  # Get the first column containing the elapsed time
                 sub_df1 = sub_df[1:]  # From second element to the last one
                 sub_df2 = sub_df[0:-1]  # From first element to the one before the last one
                 delta_df = list(np.array(sub_df1) - np.array(sub_df2))
                 test_result = (len(set(delta_df)) == 1)  # Check that the length of the set (list of unique elements in a list) is equal to 1
                 validity_vect.append(test_result)
+
+                "Check that sampling time is correct"
+                if test_result:
+                    test_result = set(delta_df) == {Parameters.sampling_time}
+                    validity_vect.append(test_result)
 
                 "Finally, check that all validity tests are True"
                 validity_file = all(validity_vect)  # AND operator on all list elements
@@ -1949,8 +2081,7 @@ def load_DESTEST_data(
 
         finally:  # Check validity of the file
             if validity_file:  # The file is valid
-                if echo:
-                    print("File ", f, " is valid.")
+                if echo: print("File ", f, " is valid.")
 
                 try:  # try to add the df data to DESTEST data
 
@@ -1985,19 +2116,16 @@ def load_DESTEST_data(
                     df_DESTEST_data = pd.concat(frames, axis=1, join="outer")  # Concatenate new df with the all_data df
 
                 except:  # error in loading into df
-                    if echo:
-                        print("Data loading failed")
+                    if echo: print("Data loading failed")
 
                 else:  # No error for loading data into DESTEST df
                     successful_loaded_data_index += 1
                     list_DESTEST_cases.append(name)
 
-                    if echo:
-                        print("Data loading completed")
+                    if echo: print("Data loading completed")
 
             else:  # The file is not valid
-                if echo:
-                    print("File ", f, " is not valid.")
+                if echo: print("File ", f, " is not valid.")
 
         "Update progress bar"
         progress["value"] = 100 * (index + 1) / number_files
@@ -2047,7 +2175,7 @@ def load_DESTEST_data(
             + " filtered files in the online DESTEST repository.\n\n"
             + str(number_files - successful_loaded_data_index)
             + " files in the repository correspond to the selected "
-            + str(filtering_code)
+            + str(filtering_code.split(".csv")[0])  # Remove the .csv from the code
             + " case but are not valid.")  # Give success rate of file loading
         mbox.showinfo("Success", message)
 
@@ -2056,8 +2184,7 @@ def load_DESTEST_data(
         return df_DESTEST_data, list_DESTEST_cases
 
     else:  # If no file has been successfully loaded, then raise an error
-        if echo:
-            print("\nNo DESTEST file from the online repository has been correctly loaded")
+        if echo: print("\nNo DESTEST file from the online repository has been correctly loaded")
 
         gui.destroy()
         raise Exception("No DESTEST data has been correctly loaded")
@@ -2106,7 +2233,7 @@ def prompt_user_for_user_data_file(
     tk.Tk.report_callback_exception = show_error  # changing the Tk class itself.
 
     "Change the window properties"
-    gui.title("Select the user data file")
+    gui.title("Select the User Data File")
     screen_width = gui.winfo_screenwidth()
     screen_height = gui.winfo_screenheight()
     gui.geometry("420x357+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window size as a function of screen resolution
@@ -2136,8 +2263,7 @@ def prompt_user_for_user_data_file(
         validity_vect = []  # Empty vector to store all results from the validity tests
         validity_file = False
 
-        if echo:
-            print("\nStart validity test of the user data file")
+        if echo: print("\nStart validity test of the user data file")
 
         "Extract file data for inspection"
         try:
@@ -2152,7 +2278,7 @@ def prompt_user_for_user_data_file(
             gui.update_idletasks()
             
         except:
-            print("\nThe selected file cannot be read correctly.\nThe selected file is not valid.")
+            if echo: print("\nThe selected file cannot be read correctly.\nThe selected file is not valid.")
             progress.pack_forget()
             
             return validity_file
@@ -2188,13 +2314,18 @@ def prompt_user_for_user_data_file(
                 progress["value"] = 70
                 gui.update_idletasks()
 
-                "Check that sampling time is correct in all elapsed time column"
+                "Check that sampling time is the same in all elapsed time column"
                 sub_df = pd.Series.tolist(df.iloc[:, 0])  # Get the first column containing the elapsed time
                 sub_df1 = sub_df[1:]  # From second element to the last one
                 sub_df2 = sub_df[0:-1]  # From first element to the one before the last one
                 delta_df = list(np.array(sub_df1) - np.array(sub_df2))
                 test_result = (len(set(delta_df)) == 1)  # Check that the length of the set (list of unique elements in a list) is equal to 1
                 validity_vect.append(test_result)
+
+                "Check that sampling time is correct"
+                if test_result:
+                    test_result = set(delta_df) == {Parameters.sampling_time}
+                    validity_vect.append(test_result)
 
                 "Update progress bar"
                 progress["value"] = 85
@@ -2252,8 +2383,7 @@ def prompt_user_for_user_data_file(
                 file_name_str_var.set(file_name)  # Update the name of the file on the window
                 gui.update_idletasks()
 
-                if echo:
-                    print("\nSelected file is: ", file_path_and_name)
+                if echo: print("\nSelected file is: ", file_path_and_name)
 
                 try:
                     "Verify validity selected file"
@@ -2272,7 +2402,7 @@ def prompt_user_for_user_data_file(
             gui.update_idletasks()
             validity_file = False
 
-        "Enable confirm selection button is file is valid"
+        "Enable confirm selection button if file is valid"
         if validity_file:
             confirm_file_button["state"] = "normal"  # Enable button
             mbox.showinfo("Success", "The selected file is valid")
@@ -2303,7 +2433,7 @@ def prompt_user_for_user_data_file(
             + "Number of data rows: "
             + str(Parameters.nbr_data_rows)
             + "\n"
-            + "List of column names: "
+            + "List of data column names (from left to right in the file): "
             + str(Parameters.list_column_names)
             + "\n"
             + "Sampling time interval [sec]: "
@@ -2366,8 +2496,6 @@ def prompt_user_for_user_data_file(
 
     # Sub-function: confirm_selection #########################################
 
-    
-
     def confirm_selection():
         """Confirm the selected file and close the GUI window and return file path"""
         
@@ -2409,7 +2537,7 @@ def prompt_user_for_user_data_file(
     "Frame 2"
     frame2 = tk.LabelFrame(
         gui,
-        text="Get Help to Format User Test Data File",
+        text="Get help to format user test data file",
         width=400,
         height=127)
     frame2.pack(padx=10, pady=(0, 10))
@@ -2508,8 +2636,7 @@ def load_user_test_data(user_test_data_file, parameters, no_user_test, echo=Fals
         gui.withdraw()
         mbox.showinfo("Warning", message)  # Popup message window
         gui.destroy()
-        if echo:
-            print("\n", message)
+        if echo: print("\n", message)
         df_user_test_data = pd.DataFrame()
         
         return df_user_test_data
@@ -2720,8 +2847,7 @@ def DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo=False):
             index_selection = index_selection[0]  # Get the first element of the tuple as int
             
         except:
-            if echo:
-                print("Something wrong happened.")
+            if echo: print("Something wrong happened.")
                 
         else:
 
@@ -2730,8 +2856,7 @@ def DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo=False):
                 KPI_listbox.delete("anchor")
                 
             except:
-                if echo:
-                    print("Something wrong happened.")
+                if echo: print("Something wrong happened.")
                     
             else:
                 "Update list KPIs and weights"
@@ -2760,8 +2885,7 @@ def DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo=False):
             KPI_listbox.delete(0, "end")
         
         except:
-            if echo:
-                print("Something wrong happened.")
+            if echo: print("Something wrong happened.")
         
         else:
             "Replace lists with empty list"
@@ -2799,7 +2923,7 @@ def DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo=False):
     "Frame 1"
     frame1 = tk.LabelFrame(
         gui,
-        text="New KPI / Comparison Metric to Add: Choose from Dropdown Menu Below",
+        text="New KPI / Comparison Metric to add: Choose from dropdown menu below",
         width=430,
         height=70)
     frame1.pack(padx=10, pady=5)
@@ -2817,7 +2941,7 @@ def DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo=False):
     "Frame 2"
     frame2 = tk.LabelFrame(
         gui,
-        text="Grading Weight for the Above KPI / Comparison Metric to Be Added",
+        text="Grading weight for the above KPI / Comparison Metric to be added",
         width=430,
         height=60)
     frame2.pack(padx=10, pady=5)
@@ -2846,7 +2970,7 @@ def DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo=False):
     "Remove selected KPI from the list"
     remove_KPI_button = tk.Button(
         frame3,
-        text="Remove Selected KPI / Comparison Metric From the List",
+        text="Remove Selected KPI / Comparison Metric from the List",
         command=lambda: remove_selected_KPI(echo))  # Create button executing function
     remove_KPI_button.pack(padx=30, pady=5)
 
@@ -2860,7 +2984,7 @@ def DESTEST_KPIs_selection(parameters, list_implemented_KPIs, echo=False):
     "Frame 4"
     frame4 = tk.LabelFrame(
         gui,
-        text="Current List of KPIs / Comparison Metrics for DESTEST Comparison",
+        text="Current List of KPIs / Comparison Metrics for DESTEST comparison",
         width=430,
         height=130)
     frame4.pack(padx=10, pady=5)
@@ -3038,7 +3162,7 @@ def DESTEST_comparison_calculation(
         else:
             list_cases = ["User Test"] + list_DESTEST_cases  # Selections of columns for the error grade calculation
 
-        list_summary_metrics = ["Error grade [%]", "Accuracy grade [%]"]
+        list_summary_metrics = ["Accuracy grade [%]", "Error grade [%]"]
 
         "Init error grade df"
         df_result_column_names = list(df_result.columns)
@@ -3053,7 +3177,7 @@ def DESTEST_comparison_calculation(
         df_error_grade = pd.concat(
             [df_error_grade, new_df],
             sort=False,
-            ignore_index=True).fillna(0)  # Concat new df into error grade df and fill missing columns with 0
+            ignore_index=True).fillna(100)  # Concat new df into error grade df and fill missing columns with 100
 
         sub_df_KPIs = df_result[df_result["KPI / Metric"].isin(list_KPIs)][list_cases + ["KPI / Metric"]]  # Select only metrics of interest (rows) and cases except reference, keep list corresponding KPIs at the end
         sub_df_KPIs.index = sub_df_KPIs["KPI / Metric"]  # Replace the index of the df by the corresponding KPI of each selected row
@@ -3088,32 +3212,38 @@ def DESTEST_comparison_calculation(
                 raise Exception("wrong grading system")
 
             for j, c in enumerate(row):  # Go through each case. "c" is current case KPI
-
                 KPI_weight = extented_list_KPI_weights[i]
-
-                if grade_system == "best_zero":
-                    sub_df_err_grades.iloc[i, j] = KPI_weight * ((abs(c) - best) / (worst - best))  # iloc[line,column]
-
-                elif grade_system == "best_highest":
-                    sub_df_err_grades.iloc[i, j] = KPI_weight * ((best - c) / (best - worst))  # iloc[line,column]
-
-                elif grade_system == "best_lowest":
-                    sub_df_err_grades.iloc[i, j] = KPI_weight * ((c - best) / (worst - best))  # iloc[line,column]
-
+                
+                if worst == best: # if all the same performance, then give max points to all cases
+                    sub_df_err_grades.iloc[i, j] = KPI_weight
+                    
                 else:
-                    raise Exception("wrong grading system")
+                    if grade_system == "best_zero":
+                        sub_df_err_grades.iloc[i, j] = KPI_weight * ((abs(c) - best) / (worst - best))  # iloc[line,column]
+
+                    elif grade_system == "best_highest":
+                        sub_df_err_grades.iloc[i, j] = KPI_weight * ((best - c) / (best - worst))  # iloc[line,column]
+
+                    elif grade_system == "best_lowest":
+                        sub_df_err_grades.iloc[i, j] = KPI_weight * ((c - best) / (worst - best))  # iloc[line,column]
+
+                    else:
+                        raise Exception("wrong grading system")
 
             i = i + 1
 
         for i, c in enumerate(list_cases):  # Go through each case
             error_grade = (sub_df_err_grades[c].sum()) / (np.array(extented_list_KPI_weights).sum())  # Normalized Error grade
-            df_error_grade.loc[(df_error_grade["KPI / Metric"] == list_summary_metrics[0]), c] = round(error_grade * 100, 2)
-            df_error_grade.loc[(df_error_grade["KPI / Metric"] == list_summary_metrics[1]), c] = round(100 - error_grade * 100, 2)  # accuracy grade as reciprocal error grade
-
+            df_error_grade.loc[(df_error_grade["KPI / Metric"] == list_summary_metrics[0]), c] = round(100 - error_grade * 100, 2)  # accuracy grade as reciprocal error grade
+            df_error_grade.loc[(df_error_grade["KPI / Metric"] == list_summary_metrics[1]), c] = round(error_grade * 100, 2)
+            
         if echo:
             print("Summary grades:")
             print(df_error_grade)
-
+        
+        "Drop the summary error grade row"
+        df_error_grade = df_error_grade[df_error_grade["KPI / Metric"] != "Error grade [%]"]
+        
         return df_error_grade, sub_df_err_grades
 
     # End Sub-function ########################################################
@@ -3259,7 +3389,7 @@ def DESTEST_comparison_calculation(
                             date_and_time_stamp_vect)
                     except:
                         result_KPI = float("nan")
-                        print("Something went wrong")
+                        if echo: print("Something went wrong")
                     finally:
                         "Find the df entry from p,c,m"
                         df_result.loc[(df_result["Parameter"] == p) & (df_result["KPI / Metric"] == m),c] = result_KPI
@@ -3309,6 +3439,199 @@ def DESTEST_comparison_calculation(
 
 
 ###############################################################################
+###                    Prompt user for output result folder                 ###
+###############################################################################
+
+def prompt_user_for_output_result_folder(dpi_list, echo=False):
+    """Generate a GUI to prompt user for an existing folder. After selection
+    and validation of the folder, a new folder is created in the selected folder.
+    This new folder is named as DESTEST comparison raw result data followed
+    by current date and time at creation of this folder
+    """
+    
+    # Initialize GUI ##########################################################
+
+    "Create the window"
+    gui = tk.Tk()  # Create a new window (widget, root, object)
+
+    "Change closing wnidow handling"
+
+    def on_closing():
+        """if closing the window, raise exception to be caught by error handler 
+        to destroy the gui and raise the error to top level.
+        """
+        
+        if mbox.askokcancel("ABORT", "Do you want to abort the DESTEST comparison procedure?"):
+            raise AbortException("The user aborted the procedure.")
+
+    gui.protocol("WM_DELETE_WINDOW", on_closing)
+
+    
+    def show_error(self, *args):
+        """Change exception handler of tkinter"""
+        
+        nonlocal gui
+        gui.destroy()
+        raise  # Simply raise the exception
+
+    tk.Tk.report_callback_exception = show_error  # changing the Tk class itself.
+
+    "Change the window properties"
+    gui.title("Select Folder to Save Result Data")
+    screen_width = gui.winfo_screenwidth()
+    screen_height = gui.winfo_screenheight()
+    gui.geometry("420x238+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window size as a function of screen resolution
+    gui.lift()  # Place on top of all Python windows
+    gui.attributes("-topmost", True)  # Place on top of all windows (all the time)
+    gui.attributes("-topmost", False)  # Disable on top all the time
+    gui.resizable(width=False, height=False)  # Disable resizing of the window
+
+    "Initialize local variables"
+    selected_parent_folder_path = ""
+    validity_folder = False
+    folder_name_str_var = StringVar()  # String var to update the label on the gui
+    folder_name_str_var.set("No folder selected")
+
+    # Sub-function: select_folder #############################################
+
+    def select_folder(echo=False):
+        """Define the function to be executed by the select_folder_button"""
+        
+        "use nonlocal var so the function above gets the updated values of those vars"
+        nonlocal selected_parent_folder_path
+        nonlocal validity_folder
+
+        try:
+            "Ask to choose folder and get full path"
+            selected_parent_folder_path = filedialog.askdirectory(title='Select folder to save result data')
+
+            "Get just file name"
+            head, name = ntpath.split(selected_parent_folder_path)  # Split between head and tail of the full file path
+
+            "Display name selected folder if folder exists"
+            if ((name) and (os.path.exists(selected_parent_folder_path))):
+                validity_folder = True
+                folder_name_str_var.set(name)  # Update the name of the file on the window
+                gui.update_idletasks()
+                if echo: print("The selected  folder is valid: ", selected_parent_folder_path)
+                    
+            else:
+                folder_name_str_var.set("No folder selected")
+                gui.update_idletasks()
+                validity_folder = False
+                if echo: print("No valid folder selected.")
+                
+        except:
+            folder_name_str_var.set("No folder selected")
+            gui.update_idletasks()
+            validity_folder = False
+            if echo: print("No valid folder selected.")
+
+        "Enable confirm selection button if folder is valid"
+        if validity_folder:
+            confirm_folder_button["state"] = "normal"  # Enable button
+            mbox.showinfo("Success", "The selected folder is valid")
+            
+        else:
+            confirm_folder_button["state"] = "disable"
+            mbox.showerror("Error", "The selected folder is not valid.")
+
+    # End Sub-function ########################################################
+
+    # Sub-function: confirm_selection #########################################
+
+    def confirm_selection():
+        """Confirm the selected folder and close the GUI window and return folder path"""
+        
+        gui.destroy()  # Close the GUI window, the output will be returned
+
+    # End Sub-function ########################################################
+
+    # Pack widgets and generate GUI ###########################################
+
+    "Pack the different buttons and labels on the GUI window"
+
+    "Frame 1"
+    frame1 = tk.LabelFrame(
+        gui,
+        text="Select folder to save result data: Figures and tables",
+        width=400,
+        height=95)
+    frame1.pack(padx=10, pady=10)
+    frame1.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
+
+    "Select folder button"
+    select_file_button = tk.Button(
+        frame1,
+        text="Select Folder",
+        command=lambda: select_folder(echo))  # Create button executing function
+    select_file_button.pack(pady=5)  # Pack the button that executes the command
+
+    "Display name selected file in GUI label"
+    my_label = tk.Label(frame1, textvariable=folder_name_str_var)  # Pack the name of the file on the window
+    my_label.pack(pady=5)
+
+    "Frame 2"
+    frame2 = tk.LabelFrame(
+        gui,
+        text="Result graph resolution: dots per inch (dpi)",
+        width=400,
+        height=60)
+    frame2.pack(padx=10, pady=(0, 10))
+    frame2.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
+
+    "Dropdown selection menu for result graph resolution"
+    dpi = StringVar()
+    dpi.set(dpi_list[3])
+
+    dropdown_dpi = tk.OptionMenu(
+        frame2,
+        dpi,
+        *dpi_list)
+    dropdown_dpi.pack(padx=30, pady=(6, 9))
+
+    "Frame 3"
+    frame3 = tk.LabelFrame(gui, width=400, height=60)
+    frame3.pack(padx=10, pady=(0, 10))
+    frame3.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
+
+    "Confirm selection button"
+    confirm_folder_button = tk.Button(
+        frame3,
+        text="Confirm Selection and Continue",
+        command=lambda: confirm_selection())  # Create button executing function
+    confirm_folder_button.pack(pady=5)
+    confirm_folder_button["state"] = "disabled"
+
+    "Generate a mainLoop to activate the gui"
+    gui.mainloop()  # Run loop updating the window
+
+    # Create the new data folder ##################################################
+    try:
+        current_date_and_time = datetime.now()
+        sufix = current_date_and_time.strftime("%d-%m-%Y %H_%M_%S")
+        new_folder_name = str("DESTEST comparison results ") + sufix
+        result_folder = os.path.join(selected_parent_folder_path, new_folder_name)
+        
+        "Create the folder"
+        if os.path.exists(result_folder):
+            raise Exception("There is already a folder with the same name.")
+
+        else:
+            os.makedirs(result_folder)
+    
+    except:
+        raise
+    
+    else:
+        
+        # Outputs of GUI ######################################################
+
+        "Output of GUI once closed"
+        return result_folder, int(dpi.get())
+
+
+###############################################################################
 ###                               DESTEST plots                             ###
 ###############################################################################
 
@@ -3320,13 +3643,15 @@ def DESTEST_plots(
     df_user_test_data,
     reference_df,
     df_DESTEST_data,
+    result_folder,
+    dpi,
     echo=False):
-    """Generates different plots fromt the DESTEST comparison results and
-    loaded data from the files.
+    """Generates different plots from the DESTEST comparison results and
+    loaded data from the files. Plots are shown in the IDE if echo is on.
+    The result table is shown in the default browser if echo is on.
     """
 
     # Initialize and generate GUI #############################################
-
     "Create the window"
     gui = tk.Tk()  # Create a new window (widget, root, object)
 
@@ -3382,7 +3707,7 @@ def DESTEST_plots(
         # All results table ###################################################
 
         "PLot the result table into an HTML doc (temp)"
-        fig = go.Figure(
+        result_table = go.Figure(
             data=[
                 go.Table(
                     header=dict(
@@ -3401,15 +3726,10 @@ def DESTEST_plots(
                 ]
             )
 
-        plot(fig, auto_open=True)  # Auto open as html in browser
-
-        #######################################################################
-
-        # Min Max Avrg table ##################################################
-
-        #######################################################################
-
-        # Comparison metrics table ############################################
+        table_title = "result table.html"
+        result_table.write_html(os.path.join(result_folder, table_title))
+        if echo:
+            plot(result_table, auto_open=True)  # Auto open as html in browser
 
         # Barplots ############################################################
 
@@ -3499,11 +3819,18 @@ def DESTEST_plots(
             plt.xticks(x_labels, labels)
 
             "Title graph"
-            plt.title(str(target) + " " + p)
-            plt.show()
+            title_graph = str(target) + " " + p
+            plt.title(title_graph)
+            figure_file_name = title_graph + ".png"
+            plt.savefig(os.path.join(result_folder, figure_file_name), format="png", dpi=dpi)
+
+            if echo:
+                plt.show()
+            else:
+                plt.clf()
 
             "Update progress bar"
-            progress["value"] = 40 + 10 * i / len(list_parameters)
+            progress["value"] = 30 + 10 * i / len(list_parameters)
             gui.update_idletasks()
 
         #######################################################################
@@ -3588,11 +3915,18 @@ def DESTEST_plots(
             plt.xticks(x_labels, labels)
 
             "Title graph"
-            plt.title(str(target) + " " + p)
-            plt.show()
+            title_graph = str(target) + " " + p
+            plt.title(title_graph)
+            figure_file_name = title_graph + ".png"
+            plt.savefig(os.path.join(result_folder, figure_file_name), format="png", dpi=dpi)
+
+            if echo:
+                plt.show()
+            else:
+                plt.clf()
         
             "Update progress bar"
-            progress["value"] = 50 + 10 * i / len(list_parameters)
+            progress["value"] = 40 + 10 * i / len(list_parameters)
             gui.update_idletasks()
 
         #######################################################################
@@ -3716,11 +4050,18 @@ def DESTEST_plots(
             plt.xticks(x_labels, labels)
 
             "Title graph"
-            plt.title(str(target1) + " & " + str(target2) + " " + p)
-            plt.show()
+            title_graph = str(target1) + " & " + str(target2) + " " + p
+            plt.title(title_graph)
+            figure_file_name = title_graph + ".png"
+            plt.savefig(os.path.join(result_folder, figure_file_name), format="png", dpi=dpi)
+
+            if echo:
+                plt.show()
+            else:
+                plt.clf()
         
             "Update progress bar"
-            progress["value"] = 60 + 10 * i / len(list_parameters)
+            progress["value"] = 50 + 10 * i / len(list_parameters)
             gui.update_idletasks()
 
         # Profile graphs ######################################################
@@ -3741,9 +4082,12 @@ def DESTEST_plots(
                 "limit number of DESTEST cases"
                 df_destest_cases = df_destest_cases.iloc[:, 0 : min(len(df_destest_cases.columns), max_DESTEST_cases_on_graph)]
 
+                "Get again list DESTEST from the df just to be sure it's in the same order"
                 "remove prefix from the DESDEST df column names"
                 prefix = p + " - "
-                list_destest_cases = list(df_destest_cases.columns.str.lstrip(prefix))  # Get again list DESTEST from the df just to be sure it's in the same order
+                list_destest_cases = list(df_destest_cases.columns)
+                for i,s in enumerate(list_destest_cases):
+                    list_destest_cases[i] = s.replace(prefix, "")
                 df_destest_cases.columns = list_destest_cases
 
                 "get data from reference (including time vectors)"
@@ -3764,16 +4108,16 @@ def DESTEST_plots(
 
                 if not no_user_test:
                     y = df_user_test_data[p][xmin_index : xmax_index + 1]
-                    plt.plot(x, y, label="User Test", color="red", linewidth=2)
+                    plt.plot(x, y, label="User Test", color="red", linewidth=5)
 
                 "Plot ref line"
                 y = ref_df_data[xmin_index : xmax_index + 1]
-                plt.plot(x, y, label="Reference", color="black", linewidth=2)
+                plt.plot(x, y, label="Reference", color="black", linewidth=5)
 
                 "Plot other lines"
                 for c in list_destest_cases:
                     y = df_destest_cases[c][xmin_index : xmax_index + 1]
-                    plt.plot(x, y, label=c, linewidth=0.5)
+                    plt.plot(x, y, label=c, linewidth=2)
 
                 "Format plot"
                 plt.xlabel("Date and Time")
@@ -3788,14 +4132,107 @@ def DESTEST_plots(
                 ax.xaxis.set_major_locator(dates.DayLocator(interval=1))  # every day
                 ax.xaxis.set_major_formatter(dates.DateFormatter("%H:%M\n%Y-%m-%d"))  # Show date only at each midnight 00:00
 
-                plt.title(p + str(" on the ") + str(d))
+                "Title graph"
+                title_graph = p + str(" on the ") + str(d)
+                plt.title(title_graph)
                 plt.legend()
+                plt.tight_layout()  # Make all elements and axes fit on the figure
+                figure_file_name = title_graph + ".png"
+                plt.savefig(os.path.join(result_folder, figure_file_name), format="png", dpi=dpi)
 
-                plt.show()  # Display a figure
+                if echo:
+                    plt.show()
+                else:
+                    plt.clf()
+            
+            "Update progress bar"
+            progress["value"] = 60 + 10 * i / len(list_parameters)
+            gui.update_idletasks()
+
+        # Residuals profile graphs ############################################
+
+        "loop through the list of typical days"
+        list_typical_days = Parameters.list_typical_days
+        
+        for i, d in enumerate(list_typical_days):
+            for p in list_parameters:
+                """Get data from df_DESTEST_data, df_user_test_data and
+                reference_df to limit max graphs"""
+
+                "Filter df columns that contains the current parameter of interest"
+                list_boolean_targets = list(p in name for name in df_DESTEST_data.columns)  # Boolean list based on condition "p" in "name" with loop on "name"
+                list_name_targets = list(df_DESTEST_data.columns[list_boolean_targets])  # Get all corresponding column names with "p" in it
+                df_destest_cases = df_DESTEST_data[list_name_targets]  # Filter df columns that contains the current parameter of interest
+
+                "limit number of DESTEST cases"
+                df_destest_cases = df_destest_cases.iloc[:, 0 : min(len(df_destest_cases.columns), max_DESTEST_cases_on_graph)]
+
+                "Get again list DESTEST from the df just to be sure it's in the same order"
+                "remove prefix from the DESDEST df column names"
+                prefix = p + " - "
+                list_destest_cases = list(df_destest_cases.columns)
+                for i,s in enumerate(list_destest_cases):
+                    list_destest_cases[i] = s.replace(prefix, "")
+                df_destest_cases.columns = list_destest_cases
+
+                "get data from reference (including time vectors)"
+                ref_df_time = reference_df.iloc[:, 0:2]
+                ref_df_data = pd.DataFrame(reference_df[p])
+                ref_df_data.columns = ["Reference"]
+
+                "Set min and max of the time series"
+                xmin = np.datetime64(d + " 00:00:00")
+                xmax = xmin + np.timedelta64(1, "D")  # Add one full day
+
+                "Find indexes of min max in timestamp series"
+                x = ref_df_time["Date and Time"]  # Time vector
+                xmin_index = list(x).index(xmin)
+                xmax_index = list(x).index(xmax)
+
+                x = x[xmin_index : xmax_index + 1]
+                
+                "Residuals = ref_data - test_data"
+                y_ref = ref_df_data["Reference"][xmin_index : xmax_index + 1]
+
+                if not no_user_test:
+                    y = df_user_test_data[p][xmin_index : xmax_index + 1]
+                    plt.plot(x, y_ref-y, label="User Test", color="red", linewidth=5)
+
+                "Plot other lines"
+                for c in list_destest_cases:
+                    y = df_destest_cases[c][xmin_index : xmax_index + 1]
+                    plt.plot(x, y_ref-y, label=c, linewidth=2)
+
+                "Format plot"
+                plt.xlabel("Date and Time")
+                plt.ylabel(str("Residuals ") + p)
+
+                ax = plt.gca()  # get the current axes
+
+                ax.set_xlim(xmin, xmax)
+
+                ax.xaxis.set_minor_locator(dates.HourLocator(interval=4))  # every 4 hours
+                ax.xaxis.set_minor_formatter(dates.DateFormatter("%H:%M"))  # hours and minutes
+                ax.xaxis.set_major_locator(dates.DayLocator(interval=1))  # every day
+                ax.xaxis.set_major_formatter(dates.DateFormatter("%H:%M\n%Y-%m-%d"))  # Show date only at each midnight 00:00
+
+                "Title graph"
+                title_graph = str("Residuals ") + p + str(" on the ") + str(d)
+                plt.title(title_graph)
+                plt.legend()
+                plt.tight_layout()  # Make all elements and axes fit on the figure
+                figure_file_name = title_graph + ".png"
+                plt.savefig(os.path.join(result_folder, figure_file_name), format="png", dpi=dpi)
+
+                if echo:
+                    plt.show()
+                else:
+                    plt.clf()
             
             "Update progress bar"
             progress["value"] = 70 + 10 * i / len(list_parameters)
             gui.update_idletasks()
+
 
         # Time distribution graphs ############################################
 
@@ -3810,9 +4247,12 @@ def DESTEST_plots(
             "limit number of DESTEST cases"
             df_destest_cases = df_destest_cases.iloc[:, 0 : min(len(df_destest_cases.columns), max_DESTEST_cases_on_graph)]
 
+            "Get again list DESTEST from the df just to be sure it's in the same order"
             "remove prefix from the DESDEST df column names"
             prefix = p + " - "
-            list_destest_cases = list(df_destest_cases.columns.str.lstrip(prefix))  # Get again list DESTEST from the df just to be sure it's in the same order
+            list_destest_cases = list(df_destest_cases.columns)
+            for i,s in enumerate(list_destest_cases):
+                list_destest_cases[i] = s.replace(prefix, "")
             df_destest_cases.columns = list_destest_cases
 
             "get data from reference (including time vectors)"
@@ -3826,25 +4266,33 @@ def DESTEST_plots(
 
             if not no_user_test:
                 y = df_user_test_data[p].sort_values(ascending=False)
-                plt.plot(x, y, label="User Test", color="red", linewidth=2)
+                plt.plot(x, y, label="User Test", color="red", linewidth=5)
 
             "Plot ref line"
             y = ref_df_data.sort_values(ascending=False)
-            plt.plot(x, y, label="Reference", color="black", linewidth=2)
+            plt.plot(x, y, label="Reference", color="black", linewidth=5)
 
             "Plot other lines"
             for c in list_destest_cases:
                 y = df_destest_cases[c].sort_values(ascending=False)
-                plt.plot(x, y, label=c, linewidth=0.5)
+                plt.plot(x, y, label=c, linewidth=2)
 
             "Format plot"
-            plt.xlabel("Hours")
+            plt.xlabel("Time [Hour]")
             plt.ylabel(p)
 
-            plt.title(str("Time distribution of ") + p)
+            "Title graph"
+            title_graph = str("Time distribution of ") + p
+            plt.title(title_graph)
             plt.legend()
+            plt.tight_layout()  # Make all elements and axes fit on the figure
+            figure_file_name = title_graph + ".png"
+            plt.savefig(os.path.join(result_folder, figure_file_name), format="png", dpi=dpi)
 
-            plt.show()  # Display a figure
+            if echo:
+                plt.show()
+            else:
+                plt.clf()
 
             "Update progress bar"
             progress["value"] = 80 + 10 * i / len(list_parameters)
@@ -3884,12 +4332,19 @@ def DESTEST_plots(
 
                 "Format plot"
                 plt.xlabel("Reference: " + p)
-                plt.ylabel("User Test: " + p)
+                plt.ylabel("Prediction (User Test): " + p)
 
-                plt.title(str("User Test vs Reference Comparison: ") + p)
+                "Title graph"
+                title_graph = str("User Test vs Reference Comparison - ") + p
+                plt.title(title_graph)
                 plt.legend(loc="upper left")
+                figure_file_name = title_graph + ".png"
+                plt.savefig(os.path.join(result_folder, figure_file_name), format="png", dpi=dpi)
 
-                plt.show()  # Display a figure
+                if echo:
+                    plt.show()
+                else:
+                    plt.clf()
             
                 "Update progress bar"
                 progress["value"] = 90 + 10 * i / len(list_parameters)
@@ -3911,12 +4366,14 @@ def DESTEST_plots(
 ###                         DESTEST comparison (main)                       ###
 ###############################################################################
 
-def DESTEST_comparison(echo=False):
+def DESTEST_comparison():
     """The 'DESTEST_comparison' function performs all the tasks for the
     comparison of the selected DESTEST data files.
 
     Input:
-    - echo (False): if echo is true, the steps of the functions and sub-functions are printed in console.
+    - echo (False): if echo is true, the steps of the functions and sub-functions
+    are printed in console and figures are displayed by the Python IDE. The Echo
+    can be switch off by the user at the beginning of the GUI.
 
     Output:
     - executes the different tasks to perform the comparison of the selected DESTEST data files.
@@ -3937,9 +4394,13 @@ def DESTEST_comparison(echo=False):
         "Hourly CVRMSE [%]",
         "Daily Amplitude CVRMSE [%]",
         "R squared (coefficient of determination) [-]",
+        "MBE [-]",
+        "MSE [-]",
         "RMSE [-]",
         "RMSLE [-]",
-        "CVRMSE [%]"
+        "CVRMSE [%]",
+        "NRMSE [%]",
+        "RMSEIQR [%]"
         ]
 
     "Dictionary for the corresponding list of implemented KPIs and comparison metrics"
@@ -3949,9 +4410,13 @@ def DESTEST_comparison(echo=False):
         "Hourly CVRMSE [%]": function_Hourly_CVRMSE,
         "Daily Amplitude CVRMSE [%]": function_Daily_Amplitude_CVRMSE,
         "R squared (coefficient of determination) [-]": function_R_squared_coeff_determination,
+        "MBE [-]": function_MBE,
+        "MSE [-]": function_MSE,
         "RMSE [-]": function_RMSE,
         "RMSLE [-]": function_RMSLE,
         "CVRMSE [%]": function_CVRMSE,
+        "NRMSE [%]": function_NRMSE,
+        "RMSEIQR [%]": function_RMSEIQR,
         "Minimum": function_Minimum,
         "Maximum": function_Maximum,
         "Average": function_Average,
@@ -3965,9 +4430,13 @@ def DESTEST_comparison(echo=False):
         "Hourly CVRMSE [%]": "best_zero",
         "Daily Amplitude CVRMSE [%]": "best_zero",
         "R squared (coefficient of determination) [-]": "best_highest",
+        "MBE [-]": "best_zero",
+        "MSE [-]": "best_zero",
         "RMSE [-]": "best_zero",
         "RMSLE [-]": "best_zero",
-        "CVRMSE [%]": "best_zero"
+        "CVRMSE [%]": "best_zero",
+        "NRMSE [%]": "best_zero",
+        "RMSEIQR [%]": "best_zero"
         }
 
     "List of parameters to be found in the parameter file"
@@ -3987,20 +4456,29 @@ def DESTEST_comparison(echo=False):
     "Limit the number of DESTEST cases visible on the result graphs to improve readability of the graph"
     max_DESTEST_cases_on_graph = 10
 
-    # Start ###################################################################
+    "List of the dpi options for the resolution of the result plots"
+    dpi_list = [
+        "100",
+        "300",
+        "500",
+        "750",
+        "1000",
+        "1200",
+        "1500",
+        "2000"
+        ]
 
-    if echo:
-        print("\nStart DESTEST comparison procedure")
+    "Default Echo mode"
+    echo = False  # Default echo mode is False / OFF
 
     # Welcome message #########################################################
-
+    
     try:
-        welcome_message(echo)
+        echo = welcome_message()
 
     except AbortException:  # If user closes gui window
         message = "The user aborted the procedure.\nThe procedure is terminated immediately."
-        if echo:
-            print("\n", message)
+        if echo: print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
         gui = tk.Tk()
         gui.withdraw()
@@ -4010,8 +4488,7 @@ def DESTEST_comparison(echo=False):
 
     except:  # If any other error occurs (absorbs the error raise)
         message = "An error has occurred.\nThe procedure is terminated immediately."
-        if echo:
-            print("\n", message)
+        if echo: print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
         gui = tk.Tk()
         gui.withdraw()
@@ -4019,18 +4496,20 @@ def DESTEST_comparison(echo=False):
         gui.destroy()
         raise  # Raise the current error to stop the execution. No need of return after raise
 
+    # Start ###################################################################
+
+    if echo: print("\nStart DESTEST comparison procedure")
+
     # Selection of case characteristics #######################################
 
-    if echo:
-        print("\nSelection of the case characteristics")
+    if echo: print("\nSelection of the case characteristics")
 
     try:
         case_type = prompt_user_case_type(echo)
 
     except AbortException:  # If user closes gui window
         message = "The user aborted the procedure.\nThe procedure is terminated immediately."
-        if echo:
-            print("\n", message)
+        if echo: print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
         gui = tk.Tk()
         gui.withdraw()
@@ -4040,8 +4519,7 @@ def DESTEST_comparison(echo=False):
 
     except:  # If any other error occurs (absorbs the error raise)
         message = "An error has occurred: No valid case type could be selected.\n\nThe procedure is terminated immediately."
-        if echo:
-            print("\n", message)
+        if echo: print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
         gui = tk.Tk()
         gui.withdraw()
@@ -4062,8 +4540,7 @@ def DESTEST_comparison(echo=False):
 
     except AbortException:  # If user closes gui window
         message = "The user aborted the procedure.\nThe procedure is terminated immediately."
-        if echo:
-            print("\n", message)
+        if echo: print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
         gui = tk.Tk()
         gui.withdraw()
@@ -4073,8 +4550,7 @@ def DESTEST_comparison(echo=False):
 
     except:  # If any other error occurs (absorbs the error raise)
         message = "An error has occurred: No valid parameter file could be found.\n\nThe procedure is terminated immediately."
-        if echo:
-            print("\n", message)
+        if echo: print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
         gui = tk.Tk()
         gui.withdraw()
@@ -4095,8 +4571,7 @@ def DESTEST_comparison(echo=False):
         
     except:  # If any other error occurs (absorbs the error raise)
         message = "An error has occurred: No valid DESTEST parameters file could be loaded correctly.\n\nThe procedure is terminated immediately."
-        if echo:
-            print("\n", message)
+        if echo: print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
         gui = tk.Tk()
         gui.withdraw()
@@ -4118,8 +4593,7 @@ def DESTEST_comparison(echo=False):
 
     # Check DESTEST online repository #########################################
 
-    if echo:
-        print("\nStart finding and loading DESTEST data folder")
+    if echo: print("\nStart finding and loading DESTEST data folder")
 
     try:
         "Check validity of online DESTEST folder containing all the pool of data files"
@@ -4128,8 +4602,7 @@ def DESTEST_comparison(echo=False):
 
     except:  # If any other error occurs (absorbs the error raise)
         message = "An error has occurred: No valid data could be found in the online DESTEST repository.\n\nThe procedure is terminated immediately."
-        if echo:
-            print("\n", message)
+        if echo: print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
         gui = tk.Tk()
         gui.withdraw()
@@ -4139,13 +4612,11 @@ def DESTEST_comparison(echo=False):
 
     else:  # If there is no error
         if validity_folder:
-            if echo:
-                print("\nThe online DESTEST repository is valid.")
+            if echo: print("\nThe online DESTEST repository is valid.")
 
         else:
             message = "An error has occurred: The online DESTEST repository is not valid.\n\nThe procedure is terminated immediately."
-            if echo:
-                print("\n", message)
+            if echo: print("\n", message)
             "Create a tk gui, hide it immediately, and destroy it after message clicked"
             gui = tk.Tk()
             gui.withdraw()
@@ -4170,8 +4641,7 @@ def DESTEST_comparison(echo=False):
 
     except:  # If any other error occurs (absorbs the error raise)
         message = "An error has occurred: No valid DESTEST data file could be loaded.\n\nThe procedure is terminated immediately."
-        if echo:
-            print("\n", message)
+        if echo: print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
         gui = tk.Tk()
         gui.withdraw()
@@ -4180,13 +4650,11 @@ def DESTEST_comparison(echo=False):
         raise  # Raise the current error to stop the execution. No need of return after raise
 
     else:
-        if echo:
-            print("DESTEST data loading completed.")
+        if echo: print("DESTEST data loading completed.")
 
     # Load user test data file ################################################
 
-    if echo:
-        print("\nStart finding and loading user test data file")
+    if echo: print("\nStart finding and loading user test data file")
 
     try:
         "Select file containing user test data file"
@@ -4200,8 +4668,7 @@ def DESTEST_comparison(echo=False):
 
     except AbortException:  # If user closes gui window
         message = "The user aborted the procedure.\nThe procedure is terminated immediately."
-        if echo:
-            print("\n", message)
+        if echo: print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
         gui = tk.Tk()
         gui.withdraw()
@@ -4211,8 +4678,7 @@ def DESTEST_comparison(echo=False):
 
     except:  # If any other error occurs (absorbs the error raise)
         message = "An error has occurred: No valid user test data file could be found.\n\nThe procedure is terminated immediately."
-        if echo:
-            print("\n", message)
+        if echo: print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
         gui = tk.Tk()
         gui.withdraw()
@@ -4240,8 +4706,7 @@ def DESTEST_comparison(echo=False):
 
     except:  # If any other error occurs (absorbs the error raise)
         message = "An error has occurred: No valid user test data file could be found.\n\nThe procedure is terminated immediately."
-        if echo:
-            print("\n", message)
+        if echo: print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
         gui = tk.Tk()
         gui.withdraw()
@@ -4251,8 +4716,7 @@ def DESTEST_comparison(echo=False):
 
     # Select DESTEST KPIs for comparison calculation ##########################
 
-    if echo:
-        print("\nPrompt DESTEST KPIs and KPI weights from user for DESTEST comparison")
+    if echo: print("\nPrompt DESTEST KPIs and KPI weights from user for DESTEST comparison")
 
     try:
         list_KPIs, list_KPI_weights = DESTEST_KPIs_selection(
@@ -4262,8 +4726,7 @@ def DESTEST_comparison(echo=False):
 
     except:  # If any other error occurs (absorbs the error raise)
         message = "An error has occurred: No valid list of KPI could be determined.\n\nThe procedure is terminated immediately."
-        if echo:
-            print("\n", message)
+        if echo: print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
         gui = tk.Tk()
         gui.withdraw()
@@ -4272,13 +4735,11 @@ def DESTEST_comparison(echo=False):
         raise  # Raise the current error to stop the execution. No need of return after raise
 
     else:
-        if echo:
-            print("\nSelection of KPIs completed.")
+        if echo: print("\nSelection of KPIs completed.")
 
     # Perform DESTEST comparison calculation ##################################
 
-    if echo:
-        print("\nStart DESTEST comparison calculation.")
+    if echo: print("\nStart DESTEST comparison calculation.")
 
     global df_result
     global reference_df
@@ -4299,8 +4760,7 @@ def DESTEST_comparison(echo=False):
         
     except:
         message = "An error has occurred: The DESTEST comparison calculation could not be carried out.\n\nThe procedure is terminated immediately."
-        if echo:
-            print("\n", message)
+        if echo: print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
         gui = tk.Tk()
         gui.withdraw()
@@ -4309,13 +4769,43 @@ def DESTEST_comparison(echo=False):
         raise  # Raise the current error to stop the execution. No need of return after raise
         
     else:
+        if echo: print("\nDESTEST comparison calculation completed.")
+
+    # Get folder to save result data ######################################
+
+    if echo: print("\nStart saving the result data.")
+
+    try:
+        result_folder, dpi = prompt_user_for_output_result_folder(dpi_list, echo)
+
+    except AbortException:  # If user closes gui window
+        message = "The user aborted the procedure.\nThe procedure is terminated immediately."
         if echo:
-            print("\nDESTEST comparison calculation completed.")
+            print("\n", message)
+        "Create a tk gui, hide it immediately, and destroy it after message clicked"
+        gui = tk.Tk()
+        gui.withdraw()
+        mbox.showerror("Error", message)  # Popup message window
+        gui.destroy()
+        raise  # Raise the current error to stop the execution. No need of return after raise
+
+    except:  # If any other error occurs (absorbs the error raise)
+        message = "An error has occurred: No valid folder was created.\n\nThe procedure is terminated immediately."
+        if echo: print("\n", message)
+        "Create a tk gui, hide it immediately, and destroy it after message clicked"
+        gui = tk.Tk()
+        gui.withdraw()
+        mbox.showerror("Error", message)  # Popup message window
+        gui.destroy()
+        raise  # Raise the current error to stop the execution. No need of return after raise
+
+    else:  # If there is no error
+        if echo:
+            print("\nA valid folder has been created to save the DESTEST result data: ", result_folder)
 
     # Generate result graphs ##################################################
 
-    if echo:
-        print("\nPlot the DESTEST results.")
+    if echo: print("\nGenerate the DESTEST result plots.")
 
     try:
         DESTEST_plots(
@@ -4326,12 +4816,13 @@ def DESTEST_comparison(echo=False):
             df_user_test_data,
             reference_df,
             df_DESTEST_data,
-            echo=False)
+            result_folder,
+            dpi,
+            echo)
 
     except:
         message = "An error has occurred: The DESTEST comparison plots could not be generated.\n\nThe procedure is terminated immediately."
-        if echo:
-            print("\n", message)
+        if echo: print("\n", message)
         "Create a tk gui, hide it immediately, and destroy it after message clicked"
         gui = tk.Tk()
         gui.withdraw()
@@ -4344,8 +4835,7 @@ def DESTEST_comparison(echo=False):
     # End #####################################################################
 
     message = str("The DESTEST comparison has been successfully executed.")
-    if echo:
-        print("\n", message)
+    if echo: print("\n", message)
     "Create a tk gui, hide it immediately, and destroy it after message clicked"
     gui = tk.Tk()
     gui.withdraw()
@@ -4361,4 +4851,4 @@ def DESTEST_comparison(echo=False):
 "If imported as module, then do not run the script"
 
 if __name__ == "__main__":  # If run directly but not imported, then run the script
-    DESTEST_comparison(echo=True)  # Execute the DESTEST comparison with echo mode on
+    DESTEST_comparison()  # Execute the DESTEST comparison
