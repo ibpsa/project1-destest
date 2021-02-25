@@ -4082,9 +4082,12 @@ def DESTEST_plots(
                 "limit number of DESTEST cases"
                 df_destest_cases = df_destest_cases.iloc[:, 0 : min(len(df_destest_cases.columns), max_DESTEST_cases_on_graph)]
 
+                "Get again list DESTEST from the df just to be sure it's in the same order"
                 "remove prefix from the DESDEST df column names"
                 prefix = p + " - "
-                list_destest_cases = list(df_destest_cases.columns.str.replace(prefix, ""))  # Get again list DESTEST from the df just to be sure it's in the same order. Use .replace()
+                list_destest_cases = list(df_destest_cases.columns)
+                for i,s in enumerate(list_destest_cases):
+                    list_destest_cases[i] = s.replace(prefix, "")
                 df_destest_cases.columns = list_destest_cases
 
                 "get data from reference (including time vectors)"
@@ -4164,9 +4167,12 @@ def DESTEST_plots(
                 "limit number of DESTEST cases"
                 df_destest_cases = df_destest_cases.iloc[:, 0 : min(len(df_destest_cases.columns), max_DESTEST_cases_on_graph)]
 
+                "Get again list DESTEST from the df just to be sure it's in the same order"
                 "remove prefix from the DESDEST df column names"
                 prefix = p + " - "
-                list_destest_cases = list(df_destest_cases.columns.str.replace(prefix, ""))  # Get again list DESTEST from the df just to be sure it's in the same order. Use .replace()
+                list_destest_cases = list(df_destest_cases.columns)
+                for i,s in enumerate(list_destest_cases):
+                    list_destest_cases[i] = s.replace(prefix, "")
                 df_destest_cases.columns = list_destest_cases
 
                 "get data from reference (including time vectors)"
@@ -4241,9 +4247,12 @@ def DESTEST_plots(
             "limit number of DESTEST cases"
             df_destest_cases = df_destest_cases.iloc[:, 0 : min(len(df_destest_cases.columns), max_DESTEST_cases_on_graph)]
 
+            "Get again list DESTEST from the df just to be sure it's in the same order"
             "remove prefix from the DESDEST df column names"
             prefix = p + " - "
-            list_destest_cases = list(df_destest_cases.columns.str.replace(prefix, ""))  # Get again list DESTEST from the df just to be sure it's in the same order. Use .replace()
+            list_destest_cases = list(df_destest_cases.columns)
+            for i,s in enumerate(list_destest_cases):
+                list_destest_cases[i] = s.replace(prefix, "")
             df_destest_cases.columns = list_destest_cases
 
             "get data from reference (including time vectors)"
