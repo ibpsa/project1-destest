@@ -3442,7 +3442,7 @@ def DESTEST_comparison_calculation(
 ###                    Prompt user for output result folder                 ###
 ###############################################################################
 
-def prompt_user_for_output_result_folder(dpi_list, echo=False):
+def prompt_user_for_output_result_folder(dpi_list, figure_format_list, echo=False):
     """Generate a GUI to prompt user for an existing folder. After selection
     and validation of the folder, a new folder is created in the selected folder.
     This new folder is named as DESTEST comparison raw result data followed
@@ -3480,7 +3480,7 @@ def prompt_user_for_output_result_folder(dpi_list, echo=False):
     gui.title("Select Folder to Save Result Data")
     screen_width = gui.winfo_screenwidth()
     screen_height = gui.winfo_screenheight()
-    gui.geometry("420x238+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window size as a function of screen resolution
+    gui.geometry("420x320+%d+%d" % (screen_width / 2 - 275, screen_height / 2 - 125))  # Adjust window size as a function of screen resolution
     gui.lift()  # Place on top of all Python windows
     gui.attributes("-topmost", True)  # Place on top of all windows (all the time)
     gui.attributes("-topmost", False)  # Disable on top all the time
@@ -3591,13 +3591,32 @@ def prompt_user_for_output_result_folder(dpi_list, echo=False):
     dropdown_dpi.pack(padx=30, pady=(6, 9))
 
     "Frame 3"
-    frame3 = tk.LabelFrame(gui, width=400, height=60)
+    frame3 = tk.LabelFrame(
+        gui,
+        text="Result graph format: png or pdf",
+        width=400,
+        height=60)
     frame3.pack(padx=10, pady=(0, 10))
     frame3.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
 
+    "Dropdown selection menu for result graph format"
+    fig_format = StringVar()
+    fig_format.set(figure_format_list[0])
+
+    dropdown_fig_format = tk.OptionMenu(
+        frame3,
+        fig_format,
+        *figure_format_list)
+    dropdown_fig_format.pack(padx=30, pady=(6, 9))
+
+    "Frame 4"
+    frame4 = tk.LabelFrame(gui, width=400, height=60)
+    frame4.pack(padx=10, pady=(0, 10))
+    frame4.pack_propagate(0)  # Disable resizing of the frame when widgets are packed or resized inside
+
     "Confirm selection button"
     confirm_folder_button = tk.Button(
-        frame3,
+        frame4,
         text="Confirm Selection and Continue",
         command=lambda: confirm_selection())  # Create button executing function
     confirm_folder_button.pack(pady=5)
@@ -3628,7 +3647,7 @@ def prompt_user_for_output_result_folder(dpi_list, echo=False):
         # Outputs of GUI ######################################################
 
         "Output of GUI once closed"
-        return result_folder, int(dpi.get())
+        return result_folder, int(dpi.get()), (fig_format.get())
 
 
 ###############################################################################
@@ -3645,6 +3664,7 @@ def DESTEST_plots(
     df_DESTEST_data,
     result_folder,
     dpi,
+    fig_format,
     echo=False):
     """Generates different plots from the DESTEST comparison results and
     loaded data from the files. Plots are shown in the IDE if echo is on.
@@ -3821,8 +3841,11 @@ def DESTEST_plots(
             "Title graph"
             title_graph = str(target) + " " + p
             plt.title(title_graph)
-            figure_file_name = title_graph + ".png"
-            plt.savefig(os.path.join(result_folder, figure_file_name), format="png", dpi=dpi)
+            figure_file_name = title_graph + fig_format
+            plt.savefig(
+                os.path.join(result_folder, figure_file_name.replace(" ", "_")),
+                format=fig_format[1:],
+                dpi=dpi)
 
             if echo:
                 plt.show()
@@ -3917,8 +3940,11 @@ def DESTEST_plots(
             "Title graph"
             title_graph = str(target) + " " + p
             plt.title(title_graph)
-            figure_file_name = title_graph + ".png"
-            plt.savefig(os.path.join(result_folder, figure_file_name), format="png", dpi=dpi)
+            figure_file_name = title_graph + fig_format
+            plt.savefig(
+                os.path.join(result_folder, figure_file_name.replace(" ", "_")),
+                format=fig_format[1:],
+                dpi=dpi)
 
             if echo:
                 plt.show()
@@ -4052,8 +4078,11 @@ def DESTEST_plots(
             "Title graph"
             title_graph = str(target1) + " & " + str(target2) + " " + p
             plt.title(title_graph)
-            figure_file_name = title_graph + ".png"
-            plt.savefig(os.path.join(result_folder, figure_file_name), format="png", dpi=dpi)
+            figure_file_name = title_graph + fig_format
+            plt.savefig(
+                os.path.join(result_folder, figure_file_name.replace(" ", "_")),
+                format=fig_format[1:],
+                dpi=dpi)
 
             if echo:
                 plt.show()
@@ -4137,8 +4166,11 @@ def DESTEST_plots(
                 plt.title(title_graph)
                 plt.legend()
                 plt.tight_layout()  # Make all elements and axes fit on the figure
-                figure_file_name = title_graph + ".png"
-                plt.savefig(os.path.join(result_folder, figure_file_name), format="png", dpi=dpi)
+                figure_file_name = title_graph + fig_format
+                plt.savefig(
+                    os.path.join(result_folder, figure_file_name.replace(" ", "_")),
+                    format=fig_format[1:],
+                    dpi=dpi)
 
                 if echo:
                     plt.show()
@@ -4221,8 +4253,11 @@ def DESTEST_plots(
                 plt.title(title_graph)
                 plt.legend()
                 plt.tight_layout()  # Make all elements and axes fit on the figure
-                figure_file_name = title_graph + ".png"
-                plt.savefig(os.path.join(result_folder, figure_file_name), format="png", dpi=dpi)
+                figure_file_name = title_graph + fig_format
+                plt.savefig(
+                    os.path.join(result_folder, figure_file_name.replace(" ", "_")),
+                    format=fig_format[1:],
+                    dpi=dpi)
 
                 if echo:
                     plt.show()
@@ -4286,8 +4321,11 @@ def DESTEST_plots(
             plt.title(title_graph)
             plt.legend()
             plt.tight_layout()  # Make all elements and axes fit on the figure
-            figure_file_name = title_graph + ".png"
-            plt.savefig(os.path.join(result_folder, figure_file_name), format="png", dpi=dpi)
+            figure_file_name = title_graph + fig_format
+            plt.savefig(
+                os.path.join(result_folder, figure_file_name.replace(" ", "_")),
+                format=fig_format[1:],
+                dpi=dpi)
 
             if echo:
                 plt.show()
@@ -4338,8 +4376,11 @@ def DESTEST_plots(
                 title_graph = str("User Test vs Reference Comparison - ") + p
                 plt.title(title_graph)
                 plt.legend(loc="upper left")
-                figure_file_name = title_graph + ".png"
-                plt.savefig(os.path.join(result_folder, figure_file_name), format="png", dpi=dpi)
+                figure_file_name = title_graph + fig_format
+                plt.savefig(
+                    os.path.join(result_folder, figure_file_name.replace(" ", "_")),
+                    format=fig_format[1:],
+                    dpi=dpi)
 
                 if echo:
                     plt.show()
@@ -4467,6 +4508,11 @@ def DESTEST_comparison():
         "1500",
         "2000"
         ]
+
+    "list of possible output formats"
+    figure_format_list = [
+        ".png",
+        ".pdf"]
 
     "Default Echo mode"
     echo = False  # Default echo mode is False / OFF
@@ -4776,7 +4822,7 @@ def DESTEST_comparison():
     if echo: print("\nStart saving the result data.")
 
     try:
-        result_folder, dpi = prompt_user_for_output_result_folder(dpi_list, echo)
+        result_folder, dpi, fig_format = prompt_user_for_output_result_folder(dpi_list, figure_format_list, echo)
 
     except AbortException:  # If user closes gui window
         message = "The user aborted the procedure.\nThe procedure is terminated immediately."
@@ -4818,6 +4864,7 @@ def DESTEST_comparison():
             df_DESTEST_data,
             result_folder,
             dpi,
+            fig_format,
             echo)
 
     except:
