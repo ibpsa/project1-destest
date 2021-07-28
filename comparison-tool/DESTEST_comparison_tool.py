@@ -3574,7 +3574,7 @@ def prompt_user_for_output_result_folder(dpi_list, figure_format_list, echo=Fals
     "Frame 2"
     frame2 = tk.LabelFrame(
         gui,
-        text="Result graph resolution and format: dots per inch (dpi)",
+        text="Result graph resolution: dots per inch (dpi)",
         width=400,
         height=60)
     frame2.pack(padx=10, pady=(0, 10))
