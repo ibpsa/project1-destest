@@ -1,0 +1,10 @@
+length header data files (number of lines):	1
+first data line (line number):	2
+number of data columns:	10
+number of data rows:	52561
+list of column names:	Elapsed time [sec],T office north [K],T office south [K],T corridor [K], Heating power office north [W], Heating power office south [W], Heating power corridor [W], Cooling power office north [W], Cooling power office south [W], Cooling power corridor [W]
+list of default KPIs:	NMBE [%],Hourly CVRMSE [%],Daily Amplitude CVRMSE [%]
+list of default KPI_weights:	1,1,1
+sampling time interval [sec]:	600
+start date time:	2018-01-01 00:00:00
+list typical days:	2018-01-05,2018-05-05
