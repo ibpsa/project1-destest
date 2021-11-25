@@ -7,4 +7,4 @@ list of default KPIs:	NMBE [%]
 list of default KPI_weights:	1
 sampling time interval [sec]:	1
 start date time:	2018-01-01 00:00:00
-list typical days:	
+list typical days:	-1
