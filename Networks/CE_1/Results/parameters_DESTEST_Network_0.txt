@@ -2,7 +2,7 @@ length header data files (number of lines):	1
 first data line (line number):	2
 number of data columns:	19
 number of data rows:	10
-list of column names:	Elapsed time [sec],Mass flow rate supply i [kg/h],Pressure drop supply between i and e [Pa],Pressure drop return between a and i [Pa],Pressure drop return between i and h [Pa],Fluid temperature supply i [C],Fluid temperature supply h [C],Fluid temperature supply g [C],Fluid temperature supply f [C],Fluid temperature supply e [C],Fluid temperature supply SimpleDistrict_1 [C],Fluid temperature return i [C],Fluid temperature return h [C],Fluid temperature return g [C],Fluid temperature return f [C],Fluid temperature return e [C],Fluid temperature return SimpleDistrict_1 [C],Heat loss supply between i and h [W],Total heat load supplied by heat source [W]
+list of column names:	Elapsed time [sec],Mass flow rate supply i [kg_h],Pressure drop supply between i and e [Pa],Pressure drop return between a and i [Pa],Pressure drop return between i and h [Pa],Fluid temperature supply i [C],Fluid temperature supply h [C],Fluid temperature supply g [C],Fluid temperature supply f [C],Fluid temperature supply e [C],Fluid temperature supply SimpleDistrict_1 [C],Fluid temperature return i [C],Fluid temperature return h [C],Fluid temperature return g [C],Fluid temperature return f [C],Fluid temperature return e [C],Fluid temperature return SimpleDistrict_1 [C],Heat loss supply between i and h [W],Total heat load supplied by heat source [W]
 list of default KPIs:	NMBE [%]
 list of default KPI_weights:	1
 sampling time interval [sec]:	1
