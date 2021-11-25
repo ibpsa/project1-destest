@@ -6,5 +6,5 @@ list of column names:	Elapsed time [sec],Mass flow rate supply i [kg/h],Pressure
 list of default KPIs:	NMBE [%]
 list of default KPI_weights:	1
 sampling time interval [sec]:	1
-start date time:	
+start date time:	2018-01-01 00:00:00
 list typical days:	
