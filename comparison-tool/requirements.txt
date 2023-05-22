@@ -1,5 +1,5 @@
 matplotlib==3.2.1
-requests==2.23.0
+requests==2.31.0
 numpy==1.21.0
 plotly==4.11.0
 pandas==1.0.3
